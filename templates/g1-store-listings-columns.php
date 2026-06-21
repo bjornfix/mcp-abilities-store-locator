@@ -17,13 +17,19 @@ global $wpsl_settings, $wpsl;
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- WPSL templates conventionally return an $output string.
 $output         = $this->get_custom_css();
 $autoload_class = ( ! $wpsl_settings['autoload'] ) ? 'class="wpsl-not-loaded"' : '';
+$search_label   = ! empty( $wpsl_settings['search_label'] )
+	? (string) $wpsl_settings['search_label']
+	: $wpsl->i18n->get_translation( 'search_label', __( 'Your location', 'mcp-abilities-store-locator' ) );
+$search_button  = ! empty( $wpsl_settings['search_btn_label'] )
+	? (string) $wpsl_settings['search_btn_label']
+	: $wpsl->i18n->get_translation( 'search_btn_label', __( 'Search', 'mcp-abilities-store-locator' ) );
 
 $output .= '<div id="wpsl-wrap" class="wpsl-store-below g1-wpsl-columns">' . "\r\n";
 $output .= "\t" . '<div class="wpsl-search wpsl-clearfix ' . $this->get_css_classes() . '">' . "\r\n";
 $output .= "\t\t" . '<div id="wpsl-search-wrap">' . "\r\n";
 $output .= "\t\t\t" . '<form autocomplete="off">' . "\r\n";
 $output .= "\t\t\t" . '<div class="wpsl-input">' . "\r\n";
-$output .= "\t\t\t\t" . '<div><label for="wpsl-search-input">' . esc_html( $wpsl->i18n->get_translation( 'search_label', __( 'Your location', 'mcp-abilities-store-locator' ) ) ) . '</label></div>' . "\r\n";
+$output .= "\t\t\t\t" . '<div><label for="wpsl-search-input">' . esc_html( $search_label ) . '</label></div>' . "\r\n";
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- This is WP Store Locator's documented template filter.
 $output .= "\t\t\t\t" . '<input id="wpsl-search-input" type="text" value="' . apply_filters( 'wpsl_search_input', '' ) . '" name="wpsl-search-input" placeholder="" aria-required="true" />' . "\r\n";
 $output .= "\t\t\t" . '</div>' . "\r\n";
@@ -56,7 +62,7 @@ if ( $this->use_category_filter() ) {
 	$output .= $this->create_category_filter();
 }
 
-$output .= "\t\t\t\t" . '<div class="wpsl-search-btn-wrap"><input id="wpsl-search-btn" type="submit" value="' . esc_attr( $wpsl->i18n->get_translation( 'search_btn_label', __( 'Search', 'mcp-abilities-store-locator' ) ) ) . '"></div>' . "\r\n";
+$output .= "\t\t\t\t" . '<div class="wpsl-search-btn-wrap"><input id="wpsl-search-btn" type="submit" value="' . esc_attr( $search_button ) . '"></div>' . "\r\n";
 $output .= "\t\t" . '</form>' . "\r\n";
 $output .= "\t\t" . '</div>' . "\r\n";
 $output .= "\t" . '</div>' . "\r\n";

@@ -8,7 +8,7 @@ Store Locator maintenance abilities for MCP.
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-purple.svg)](https://php.net)
 
 **Tested up to:** 7.0
-**Stable tag:** 0.1.0
+**Stable tag:** 0.1.1
 **License:** GPLv2 or later
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -191,6 +191,12 @@ If you skip base-stack verification and start with add-ons immediately, troubles
 - The frontend template preserves the Store Locator shortcode, map, search form, AJAX result list, and cache behavior.
 
 ## Changelog
+
+### 0.1.1
+
+- Improved the G1 dealer columns template so card padding is not overridden by Store Locator base styles.
+- Read the search label and button text directly from Store Locator settings in the maintained template.
+- Moved G1 Store Locator Norwegian label and Elementor store-post compatibility handling out of the temporary mu-plugin and into this maintained add-on.
 
 ### 0.1.0
 

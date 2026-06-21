@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Store Locator
  * Plugin URI: https://devenia.com
  * Description: Narrow MCP abilities and maintained frontend template support for WP Store Locator.
- * Version: 0.1.0
+ * Version: 0.1.1
  * Author: Devenia
  * Author URI: https://devenia.com
  * License: GPL-2.0+
@@ -75,7 +75,7 @@ function mcp_wpsl_enqueue_columns_template_style(): void {
 	$css .= "#wpsl-wrap.g1-wpsl-columns #wpsl-stores,#wpsl-wrap.g1-wpsl-columns #wpsl-direction-details{height:auto!important;overflow:visible;}\n";
 	$css .= "#wpsl-wrap.g1-wpsl-columns #wpsl-stores>ul{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin:0;padding:0;}\n";
 	$css .= "#wpsl-wrap.g1-wpsl-columns #wpsl-result-list li{box-sizing:border-box;width:auto;padding:0;border-bottom:0;}\n";
-	$css .= "#wpsl-wrap.g1-wpsl-columns .g1-wpsl-card{height:100%;padding:20px;border:1px solid #e5e5e5;background:#fff;}\n";
+	$css .= "#wpsl-wrap.g1-wpsl-columns #wpsl-result-list li.g1-wpsl-card{height:100%;padding:20px;border:1px solid #e5e5e5;background:#fff;}\n";
 	$css .= "@media (max-width:1024px){#wpsl-wrap.g1-wpsl-columns #wpsl-stores>ul{grid-template-columns:repeat(2,minmax(0,1fr));}}\n";
 	$css .= "@media (max-width:767px){#wpsl-wrap.g1-wpsl-columns #wpsl-stores>ul{grid-template-columns:1fr;gap:20px;}}\n";
 
@@ -84,7 +84,7 @@ function mcp_wpsl_enqueue_columns_template_style(): void {
 		return;
 	}
 
-	wp_register_style( 'mcp-wpsl-columns-template', false, array(), '0.1.0' );
+	wp_register_style( 'mcp-wpsl-columns-template', false, array(), '0.1.1' );
 	wp_enqueue_style( 'mcp-wpsl-columns-template' );
 	wp_add_inline_style( 'mcp-wpsl-columns-template', $css );
 }
@@ -103,6 +103,80 @@ function mcp_wpsl_columns_listing_template( string $template ): string {
 	return str_replace( '<li data-store-id="<%= id %>">', '<li class="g1-wpsl-card" data-store-id="<%= id %>">', $template );
 }
 add_filter( 'wpsl_listing_template', 'mcp_wpsl_columns_listing_template', 20 );
+
+/**
+ * Return Norwegian frontend labels for WP Store Locator strings that can bypass saved settings.
+ *
+ * @return array<string,string>
+ */
+function mcp_wpsl_get_norwegian_labels(): array {
+	return array(
+		'Your location' => 'Sted/by',
+		'Search' => 'Søk',
+		'Searching...' => 'Søker...',
+		'Search radius' => 'Søkeradius',
+		'No results found' => 'Beklager, ingen butikk funnet!',
+		'Results' => 'resultater',
+		'More info' => 'Mer informasjon',
+		'Directions' => '',
+		'No route could be found between the origin and destination' => 'Ingen rute ble funnet mellom opprinnelses- og destinasjonsstedet',
+		'Back' => 'Tilbake',
+		'Street view' => 'Gatevisning',
+		'Zoom here' => 'Zoom her',
+		'Something went wrong, please try again!' => 'Noe gikk galt, vennligst prøv igjen!',
+		'API usage limit reached' => 'Grensen for API-bruk nådd',
+		'Phone' => 'Telefon',
+		'Fax' => 'Faks',
+		'Email' => 'E-post',
+		'Url' => 'url',
+		'Hours' => 'Timer',
+		'Start location' => 'Startsted',
+		'Category filter' => 'Kategorifilter',
+		'All' => 'Alle',
+	);
+}
+
+/**
+ * Keep Store Locator frontend labels Norwegian when WPML String Translation bypasses WPSL settings.
+ *
+ * @param string $translation Translated string.
+ * @param string $text        Original string.
+ * @param string $domain      Text domain.
+ */
+function mcp_wpsl_translate_norwegian_label( string $translation, string $text, string $domain ): string {
+	if ( ! in_array( $domain, array( 'wp-store-locator', 'wpsl' ), true ) ) {
+		return $translation;
+	}
+
+	$locale = determine_locale();
+	if ( ! in_array( $locale, array( 'nb_NO', 'nn_NO' ), true ) && ! str_starts_with( (string) $locale, 'no' ) ) {
+		return $translation;
+	}
+
+	$labels = mcp_wpsl_get_norwegian_labels();
+	return array_key_exists( $text, $labels ) ? $labels[ $text ] : $translation;
+}
+add_filter( 'gettext', 'mcp_wpsl_translate_norwegian_label', 20, 3 );
+
+/**
+ * Let Elementor-rendered Store Locator store posts use their Elementor content.
+ *
+ * @param bool $skip Whether WPSL should skip its CPT template.
+ */
+function mcp_wpsl_skip_cpt_template_for_elementor_store( bool $skip ): bool {
+	if ( ! is_singular( 'wpsl_stores' ) ) {
+		return $skip;
+	}
+
+	$post_id = get_queried_object_id();
+	if ( ! $post_id ) {
+		return $skip;
+	}
+
+	$elementor_data = get_post_meta( $post_id, '_elementor_data', true );
+	return $elementor_data ? true : $skip;
+}
+add_filter( 'wpsl_skip_cpt_template', 'mcp_wpsl_skip_cpt_template_for_elementor_store', 20 );
 
 /**
  * Check if the Abilities API is available.
