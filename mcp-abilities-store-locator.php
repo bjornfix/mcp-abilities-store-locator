@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Store Locator
  * Plugin URI: https://devenia.com
  * Description: Narrow MCP abilities and maintained frontend template support for WP Store Locator.
- * Version: 0.1.1
+ * Version: 0.1.2
  * Author: Devenia
  * Author URI: https://devenia.com
  * License: GPL-2.0+
@@ -75,7 +75,7 @@ function mcp_wpsl_enqueue_columns_template_style(): void {
 	$css .= "#wpsl-wrap.g1-wpsl-columns #wpsl-stores,#wpsl-wrap.g1-wpsl-columns #wpsl-direction-details{height:auto!important;overflow:visible;}\n";
 	$css .= "#wpsl-wrap.g1-wpsl-columns #wpsl-stores>ul{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin:0;padding:0;}\n";
 	$css .= "#wpsl-wrap.g1-wpsl-columns #wpsl-result-list li{box-sizing:border-box;width:auto;padding:0;border-bottom:0;}\n";
-	$css .= "#wpsl-wrap.g1-wpsl-columns #wpsl-result-list li.g1-wpsl-card{height:100%;padding:20px;border:1px solid #e5e5e5;background:#fff;}\n";
+	$css .= "#wpsl-wrap.g1-wpsl-columns #wpsl-result-list li.g1-wpsl-card{height:100%;padding:0 0 20px;border:0;border-bottom:1px solid #e5e5e5;background:#fff;}\n";
 	$css .= "@media (max-width:1024px){#wpsl-wrap.g1-wpsl-columns #wpsl-stores>ul{grid-template-columns:repeat(2,minmax(0,1fr));}}\n";
 	$css .= "@media (max-width:767px){#wpsl-wrap.g1-wpsl-columns #wpsl-stores>ul{grid-template-columns:1fr;gap:20px;}}\n";
 
@@ -84,7 +84,7 @@ function mcp_wpsl_enqueue_columns_template_style(): void {
 		return;
 	}
 
-	wp_register_style( 'mcp-wpsl-columns-template', false, array(), '0.1.1' );
+	wp_register_style( 'mcp-wpsl-columns-template', false, array(), '0.1.2' );
 	wp_enqueue_style( 'mcp-wpsl-columns-template' );
 	wp_add_inline_style( 'mcp-wpsl-columns-template', $css );
 }
