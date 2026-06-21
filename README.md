@@ -8,7 +8,7 @@ Store Locator maintenance abilities for MCP.
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-purple.svg)](https://php.net)
 
 **Tested up to:** 7.0
-**Stable tag:** 0.1.3
+**Stable tag:** 0.1.4
 **License:** GPLv2 or later
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -18,9 +18,9 @@ Store Locator maintenance abilities for MCP.
 
 This plugin is part of the Devenia MCP abilities ecosystem. It gives an MCP-capable agent a focused, authenticated way to work with Store Locator data inside WordPress through MCP.
 
-It adds abilities for Store Locator settings, templates, store records, store categories, and transient cleanup. It also registers a maintained `g1_columns` locator template that keeps maps, search, AJAX results, labels, and store data under the Store Locator plugin instead of duplicating dealer entries into Elementor or static page content.
+It adds abilities for Store Locator settings, templates, store records, store categories, and transient cleanup. It can also register maintained locator templates that keep maps, search, AJAX results, labels, and store data under the Store Locator plugin instead of duplicating location entries into Elementor or static page content.
 
-**Example:** "Put the dealer listings into columns." - The agent can inspect Store Locator settings, confirm available templates, activate the maintained template, clear Store Locator transients, and verify the rendered dealer page.
+**Example:** "Put the location listings into columns." - The agent can inspect Store Locator settings, confirm available templates, activate the maintained template, clear Store Locator transients, and verify the rendered locator page.
 
 ## The Real Workflow
 
@@ -64,7 +64,7 @@ to:
 - open wp-admin
 - find the Store Locator settings
 - inspect store records one by one
-- copy dealer details into page-builder cards when layout demands change
+- copy location details into page-builder cards when layout demands change
 - remember to clear locator cache
 
 ### After
@@ -78,10 +78,10 @@ to:
 
 This is a good fit for:
 
-- agencies managing WordPress sites with Store Locator dealer/location data
+- agencies managing WordPress sites with Store Locator location data
 - operators who want agents to maintain locator settings and records safely
 - teams already using MCP Expose Abilities
-- sites where store/dealer/search output should stay dynamic and plugin-owned
+- sites where store/search output should stay dynamic and plugin-owned
 
 It is especially useful when page-builder work would otherwise duplicate data that should remain canonical in Store Locator.
 
@@ -142,7 +142,7 @@ If you skip base-stack verification and start with add-ons immediately, troubles
 {
   "ability_name": "wpsl/set-template",
   "parameters": {
-    "template_id": "g1_columns",
+    "template_id": "your_template_id",
     "listing_below_no_scroll": true
   }
 }
@@ -170,12 +170,12 @@ If you skip base-stack verification and start with add-ons immediately, troubles
   "parameters": {
     "id": 123,
     "meta": {
-      "address": "Exampleveien 1",
-      "city": "Oslo",
-      "zip": "0150",
-      "country": "Norway",
-      "lat": "59.9139",
-      "lng": "10.7522",
+      "address": "Example Street 1",
+      "city": "Example City",
+      "zip": "00000",
+      "country": "Example Country",
+      "lat": "0",
+      "lng": "0",
       "phone": "+47 00 00 00 00",
       "email": "post@example.com"
     }
@@ -186,27 +186,31 @@ If you skip base-stack verification and start with add-ons immediately, troubles
 ## Notes
 
 - The plugin intentionally keeps store content in Store Locator posts and metadata.
-- It does not create Elementor cards, static dealer listings, or duplicate store records into page content.
-- The `g1_columns` template is a maintained Store Locator template registered through the locator template filter.
+- It does not create Elementor cards, static location listings, or duplicate store records into page content.
+- Maintained Store Locator templates are registered through the locator template filter.
 - The frontend template preserves the Store Locator shortcode, map, search form, AJAX result list, and cache behavior.
 
 ## Changelog
 
+### 0.1.4
+
+- Tightened the mobile top gap above the Store Locator search label.
+
 ### 0.1.3
 
-- Suppressed the final divider line after the last G1 dealer entry.
+- Suppressed the final divider line after the last location entry.
 
 ### 0.1.2
 
-- Adjusted the G1 dealer columns template so dealer entries use only a bottom divider instead of boxed card borders.
+- Adjusted the maintained columns template so location entries use only a bottom divider instead of boxed card borders.
 
 ### 0.1.1
 
-- Improved the G1 dealer columns template so card padding is not overridden by Store Locator base styles.
+- Improved the maintained columns template so card padding is not overridden by Store Locator base styles.
 - Read the search label and button text directly from Store Locator settings in the maintained template.
-- Moved G1 Store Locator Norwegian label and Elementor store-post compatibility handling out of the temporary mu-plugin and into this maintained add-on.
+- Added maintained label and Elementor store-post compatibility handling.
 
 ### 0.1.0
 
 - Added Store Locator settings, template, store, category, and transient abilities.
-- Added the maintained `g1_columns` Store Locator template for dynamic dealer columns.
+- Added a maintained Store Locator template for dynamic location columns.
