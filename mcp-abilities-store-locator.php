@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Store Locator
  * Plugin URI: https://devenia.com
  * Description: Narrow MCP abilities and maintained frontend template support for WP Store Locator.
- * Version: 0.1.7
+ * Version: 0.1.8
  * Author: Devenia
  * Author URI: https://devenia.com
  * License: GPL-2.0+
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 const MCP_WPSL_G1_COLUMNS_TEMPLATE = 'g1_columns';
-const MCP_WPSL_VERSION             = '0.1.7';
+const MCP_WPSL_VERSION             = '0.1.8';
 const MCP_WPSL_EN_STORE_BASE       = 'stores';
 
 /**
@@ -67,6 +67,40 @@ function mcp_wpsl_register_english_store_rewrite(): void {
 add_action( 'init', 'mcp_wpsl_register_english_store_rewrite', 8 );
 
 /**
+ * Return the current request path with basic sanitization.
+ */
+function mcp_wpsl_get_request_path(): string {
+	$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REQUEST_URI'] ) ) : '';
+	return (string) strtok( $request_uri, '?' );
+}
+
+/**
+ * Route the English store base to WPSL store posts even when WPML/WPSL rewrite rules miss it.
+ *
+ * @param array<string,mixed> $query_vars Parsed request query vars.
+ * @return array<string,mixed>
+ */
+function mcp_wpsl_route_english_store_request( array $query_vars ): array {
+	$request_path = mcp_wpsl_get_request_path();
+	if ( ! preg_match( '#^/en/' . preg_quote( MCP_WPSL_EN_STORE_BASE, '#' ) . '/([^/]+)/?$#', $request_path, $matches ) ) {
+		return $query_vars;
+	}
+
+	$slug = sanitize_title( (string) $matches[1] );
+	if ( '' === $slug ) {
+		return $query_vars;
+	}
+
+	$query_vars['post_type']   = 'wpsl_stores';
+	$query_vars['name']        = $slug;
+	$query_vars['wpsl_stores'] = $slug;
+	$query_vars['lang']        = 'en';
+
+	return $query_vars;
+}
+add_filter( 'request', 'mcp_wpsl_route_english_store_request', 1 );
+
+/**
  * Flush rewrite rules once after a plugin version with rewrite changes is deployed.
  */
 function mcp_wpsl_maybe_flush_rewrite_rules(): void {
@@ -108,9 +142,7 @@ function mcp_wpsl_redirect_english_store_canonical_base(): void {
 		return;
 	}
 
-	$request_uri  = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REQUEST_URI'] ) ) : '';
-	$request_path = $request_uri;
-	$request_path = (string) strtok( $request_path, '?' );
+	$request_path = mcp_wpsl_get_request_path();
 	if ( ! str_starts_with( $request_path, '/en/butikker/' ) ) {
 		return;
 	}
