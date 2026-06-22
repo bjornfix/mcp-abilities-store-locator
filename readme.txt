@@ -4,7 +4,7 @@ Tags: mcp, ai, automation, abilities-api, store-locator
 Requires at least: 6.9
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.1.9
+Stable tag: 0.1.10
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.txt
 
@@ -17,6 +17,9 @@ Adds authenticated WordPress Abilities API tools for WP Store Locator maintenanc
 The abilities cover WPSL status, settings, templates, stores, categories, and transient cleanup. The plugin does not duplicate store content into Elementor or static page content. Store data remains owned by WP Store Locator.
 
 == Changelog ==
+
+= 0.1.10 =
+* Renamed the maintained columns template, frontend classes, and internal identifiers to generic public-plugin names.
 
 = 0.1.9 =
 * Replaced site-specific store URL handling with configurable translated WPSL store permalink bases.

@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Store Locator
  * Plugin URI: https://devenia.com
  * Description: Narrow MCP abilities and maintained frontend template support for WP Store Locator.
- * Version: 0.1.9
+ * Version: 0.1.10
  * Author: Devenia
  * Author URI: https://devenia.com
  * License: GPL-2.0+
@@ -21,8 +21,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-const MCP_WPSL_G1_COLUMNS_TEMPLATE = 'g1_columns';
-const MCP_WPSL_VERSION             = '0.1.9';
+const MCP_WPSL_COLUMNS_TEMPLATE = 'dynamic_columns';
+const MCP_WPSL_VERSION          = '0.1.10';
 const MCP_WPSL_BASE_TRANSLATIONS   = 'mcp_wpsl_permalink_base_translations';
 
 /**
@@ -213,47 +213,47 @@ function mcp_wpsl_redirect_translated_store_canonical_base(): void {
 add_action( 'template_redirect', 'mcp_wpsl_redirect_translated_store_canonical_base', 1 );
 
 /**
- * Register the maintained G1 columns store-locator template with WP Store Locator.
+ * Register the maintained columns store-locator template with WP Store Locator.
  *
  * @param array<int,array<string,string>> $templates Existing WPSL templates.
  * @return array<int,array<string,string>>
  */
-function mcp_wpsl_register_g1_columns_template( array $templates ): array {
+function mcp_wpsl_register_columns_template( array $templates ): array {
 	$templates[] = array(
-		'id'   => MCP_WPSL_G1_COLUMNS_TEMPLATE,
-		'name' => __( 'G1 dealer columns', 'mcp-abilities-store-locator' ),
-		'path' => plugin_dir_path( __FILE__ ) . 'templates/g1-store-listings-columns.php',
+		'id'   => MCP_WPSL_COLUMNS_TEMPLATE,
+		'name' => __( 'Dynamic columns', 'mcp-abilities-store-locator' ),
+		'path' => plugin_dir_path( __FILE__ ) . 'templates/store-listings-columns.php',
 	);
 
 	return $templates;
 }
-add_filter( 'wpsl_templates', 'mcp_wpsl_register_g1_columns_template' );
+add_filter( 'wpsl_templates', 'mcp_wpsl_register_columns_template' );
 
 /**
  * Check if the current WPSL setting selects the maintained columns template.
  */
-function mcp_wpsl_uses_g1_columns_template(): bool {
+function mcp_wpsl_uses_columns_template(): bool {
 	$settings = mcp_wpsl_get_settings();
-	return isset( $settings['template_id'] ) && MCP_WPSL_G1_COLUMNS_TEMPLATE === (string) $settings['template_id'];
+	return isset( $settings['template_id'] ) && MCP_WPSL_COLUMNS_TEMPLATE === (string) $settings['template_id'];
 }
 
 /**
  * Add the minimal frontend layout required by the maintained WPSL columns template.
  */
 function mcp_wpsl_enqueue_columns_template_style(): void {
-	if ( ! mcp_wpsl_uses_g1_columns_template() ) {
+	if ( ! mcp_wpsl_uses_columns_template() ) {
 		return;
 	}
 
-	$css  = "#wpsl-wrap.g1-wpsl-columns #wpsl-result-list{width:100%;margin:12px 0 0;}\n";
-	$css .= "#wpsl-wrap.g1-wpsl-columns #wpsl-stores,#wpsl-wrap.g1-wpsl-columns #wpsl-direction-details{height:auto!important;overflow:visible;}\n";
-	$css .= "#wpsl-wrap.g1-wpsl-columns #wpsl-stores>ul{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin:0;padding:0;}\n";
-	$css .= "#wpsl-wrap.g1-wpsl-columns #wpsl-result-list li{box-sizing:border-box;width:auto;padding:0;border-bottom:0;}\n";
-	$css .= "#wpsl-wrap.g1-wpsl-columns #wpsl-result-list li.g1-wpsl-card{height:100%;padding:0 0 20px;border:0;border-bottom:1px solid #e5e5e5;background:#fff;}\n";
-	$css .= "#wpsl-wrap.g1-wpsl-columns #wpsl-result-list li.g1-wpsl-card:last-child{border-bottom:0;}\n";
+	$css  = "#wpsl-wrap.mcp-wpsl-columns #wpsl-result-list{width:100%;margin:12px 0 0;}\n";
+	$css .= "#wpsl-wrap.mcp-wpsl-columns #wpsl-stores,#wpsl-wrap.mcp-wpsl-columns #wpsl-direction-details{height:auto!important;overflow:visible;}\n";
+	$css .= "#wpsl-wrap.mcp-wpsl-columns #wpsl-stores>ul{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin:0;padding:0;}\n";
+	$css .= "#wpsl-wrap.mcp-wpsl-columns #wpsl-result-list li{box-sizing:border-box;width:auto;padding:0;border-bottom:0;}\n";
+	$css .= "#wpsl-wrap.mcp-wpsl-columns #wpsl-result-list li.mcp-wpsl-card{height:100%;padding:0 0 20px;border:0;border-bottom:1px solid #e5e5e5;background:#fff;}\n";
+	$css .= "#wpsl-wrap.mcp-wpsl-columns #wpsl-result-list li.mcp-wpsl-card:last-child{border-bottom:0;}\n";
 	$css .= ".elementor-widget-shortcode .wpsl-gmap-canvas{margin-bottom:0;}\n";
-	$css .= "@media (max-width:1024px){#wpsl-wrap.g1-wpsl-columns #wpsl-stores>ul{grid-template-columns:repeat(2,minmax(0,1fr));}}\n";
-	$css .= "@media (max-width:767px){#wpsl-wrap.g1-wpsl-columns .wpsl-search{padding-top:14px;}#wpsl-wrap.g1-wpsl-columns #wpsl-stores>ul{grid-template-columns:1fr;gap:20px;}}\n";
+	$css .= "@media (max-width:1024px){#wpsl-wrap.mcp-wpsl-columns #wpsl-stores>ul{grid-template-columns:repeat(2,minmax(0,1fr));}}\n";
+	$css .= "@media (max-width:767px){#wpsl-wrap.mcp-wpsl-columns .wpsl-search{padding-top:14px;}#wpsl-wrap.mcp-wpsl-columns #wpsl-stores>ul{grid-template-columns:1fr;gap:20px;}}\n";
 
 	if ( wp_style_is( 'wpsl-styles', 'enqueued' ) || wp_style_is( 'wpsl-styles', 'registered' ) ) {
 		wp_add_inline_style( 'wpsl-styles', $css );
@@ -272,11 +272,11 @@ add_action( 'wp_enqueue_scripts', 'mcp_wpsl_enqueue_columns_template_style', 30 
  * @param string $template Existing Underscore.js listing template.
  */
 function mcp_wpsl_columns_listing_template( string $template ): string {
-	if ( ! mcp_wpsl_uses_g1_columns_template() ) {
+	if ( ! mcp_wpsl_uses_columns_template() ) {
 		return $template;
 	}
 
-	return str_replace( '<li data-store-id="<%= id %>">', '<li class="g1-wpsl-card" data-store-id="<%= id %>">', $template );
+	return str_replace( '<li data-store-id="<%= id %>">', '<li class="mcp-wpsl-card" data-store-id="<%= id %>">', $template );
 }
 add_filter( 'wpsl_listing_template', 'mcp_wpsl_columns_listing_template', 20 );
 
@@ -840,7 +840,7 @@ function mcp_wpsl_register_abilities(): void {
 				'properties'           => array(
 					'template_id'             => array(
 						'type'        => 'string',
-						'description' => 'Template ID to activate, such as below_map or g1_columns.',
+						'description' => 'Template ID to activate, such as below_map or dynamic_columns.',
 					),
 					'listing_below_no_scroll' => array(
 						'type'        => 'boolean',

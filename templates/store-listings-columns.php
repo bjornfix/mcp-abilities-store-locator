@@ -1,6 +1,6 @@
 <?php
 /**
- * G1 columns template for WP Store Locator.
+ * Columns template for WP Store Locator.
  *
  * Based on WP Store Locator's bundled "store-listings-below" template so the
  * plugin keeps controlling maps, search, AJAX, labels, and store data.
@@ -24,7 +24,7 @@ $search_button  = ! empty( $wpsl_settings['search_btn_label'] )
 	? (string) $wpsl_settings['search_btn_label']
 	: $wpsl->i18n->get_translation( 'search_btn_label', __( 'Search', 'mcp-abilities-store-locator' ) );
 
-$output .= '<div id="wpsl-wrap" class="wpsl-store-below g1-wpsl-columns">' . "\r\n";
+$output .= '<div id="wpsl-wrap" class="wpsl-store-below mcp-wpsl-columns">' . "\r\n";
 $output .= "\t" . '<div class="wpsl-search wpsl-clearfix ' . $this->get_css_classes() . '">' . "\r\n";
 $output .= "\t\t" . '<div id="wpsl-search-wrap">' . "\r\n";
 $output .= "\t\t\t" . '<form autocomplete="off">' . "\r\n";
