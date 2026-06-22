@@ -8,7 +8,7 @@ Store Locator maintenance abilities for MCP.
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-purple.svg)](https://php.net)
 
 **Tested up to:** 7.0
-**Stable tag:** 0.1.6
+**Stable tag:** 0.1.7
 **License:** GPLv2 or later
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -191,6 +191,10 @@ If you skip base-stack verification and start with add-ons immediately, troubles
 - The frontend template preserves the Store Locator shortcode, map, search form, AJAX result list, and cache behavior.
 
 ## Changelog
+
+### 0.1.7
+
+- Fixed English store permalink generation and routing for the `/en/stores/` base.
 
 ### 0.1.6
 

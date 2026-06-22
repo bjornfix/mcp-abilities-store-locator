@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Store Locator
  * Plugin URI: https://devenia.com
  * Description: Narrow MCP abilities and maintained frontend template support for WP Store Locator.
- * Version: 0.1.6
+ * Version: 0.1.7
  * Author: Devenia
  * Author URI: https://devenia.com
  * License: GPL-2.0+
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 const MCP_WPSL_G1_COLUMNS_TEMPLATE = 'g1_columns';
-const MCP_WPSL_VERSION             = '0.1.6';
+const MCP_WPSL_VERSION             = '0.1.7';
 const MCP_WPSL_EN_STORE_BASE       = 'stores';
 
 /**
@@ -60,7 +60,7 @@ function mcp_wpsl_get_store_language_code( int $post_id ): string {
 function mcp_wpsl_register_english_store_rewrite(): void {
 	add_rewrite_rule(
 		'^en/' . MCP_WPSL_EN_STORE_BASE . '/([^/]+)/?$',
-		'index.php?wpsl_stores=$matches[1]&lang=en',
+		'index.php?post_type=wpsl_stores&name=$matches[1]&lang=en',
 		'top'
 	);
 }
@@ -91,7 +91,7 @@ function mcp_wpsl_filter_english_store_permalink( string $post_link, WP_Post $po
 		return $post_link;
 	}
 
-	return home_url( user_trailingslashit( 'en/' . MCP_WPSL_EN_STORE_BASE . '/' . $post->post_name ) );
+	return trailingslashit( (string) get_option( 'home' ) ) . user_trailingslashit( 'en/' . MCP_WPSL_EN_STORE_BASE . '/' . $post->post_name );
 }
 add_filter( 'post_type_link', 'mcp_wpsl_filter_english_store_permalink', 20, 2 );
 
