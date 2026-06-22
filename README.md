@@ -8,7 +8,7 @@ Store Locator maintenance abilities for MCP.
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-purple.svg)](https://php.net)
 
 **Tested up to:** 7.0
-**Stable tag:** 0.1.8
+**Stable tag:** 0.1.9
 **License:** GPLv2 or later
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -111,12 +111,13 @@ If you are new to the stack, use this order:
 
 If you skip base-stack verification and start with add-ons immediately, troubleshooting gets harder than it needs to be.
 
-## Abilities (9)
+## Abilities (10)
 
 | Ability | Description |
 |---------|-------------|
 | `wpsl/get-status` | Read Store Locator availability, settings, templates, and published store count |
 | `wpsl/update-settings` | Update supported Store Locator settings with Store Locator-aware validation |
+| `wpsl/update-permalink-base-translations` | Configure translated Store Locator permalink bases |
 | `wpsl/set-template` | Set the active Store Locator search template by installed template ID |
 | `wpsl/list-stores` | List real Store Locator store posts with address/contact/location metadata |
 | `wpsl/get-store` | Read one real Store Locator store post and its locator metadata |
@@ -192,17 +193,22 @@ If you skip base-stack verification and start with add-ons immediately, troubles
 
 ## Changelog
 
+### 0.1.9
+
+- Replaced site-specific store URL handling with configurable translated WPSL store permalink bases.
+- Added an ability for updating translated store permalink base mappings.
+
 ### 0.1.8
 
-- Added a request router for English `/en/stores/` store URLs when WPML/WPSL rewrite matching misses the custom base.
+- Added a request router for configured translated store URL bases when WPML/WPSL rewrite matching misses the custom base.
 
 ### 0.1.7
 
-- Fixed English store permalink generation and routing for the `/en/stores/` base.
+- Fixed translated store permalink generation and routing for custom translated bases.
 
 ### 0.1.6
 
-- Added an English `/en/stores/` permalink base for English WP Store Locator store translations.
+- Added translated permalink base support for WP Store Locator store translations.
 
 ### 0.1.5
 

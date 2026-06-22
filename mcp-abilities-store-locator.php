@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Store Locator
  * Plugin URI: https://devenia.com
  * Description: Narrow MCP abilities and maintained frontend template support for WP Store Locator.
- * Version: 0.1.8
+ * Version: 0.1.9
  * Author: Devenia
  * Author URI: https://devenia.com
  * License: GPL-2.0+
@@ -22,8 +22,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 const MCP_WPSL_G1_COLUMNS_TEMPLATE = 'g1_columns';
-const MCP_WPSL_VERSION             = '0.1.8';
-const MCP_WPSL_EN_STORE_BASE       = 'stores';
+const MCP_WPSL_VERSION             = '0.1.9';
+const MCP_WPSL_BASE_TRANSLATIONS   = 'mcp_wpsl_permalink_base_translations';
 
 /**
  * Check whether WP Store Locator is active enough for settings/template work.
@@ -41,6 +41,39 @@ function mcp_wpsl_get_settings(): array {
 }
 
 /**
+ * Return configured language-specific WPSL store bases.
+ *
+ * @return array<string,string>
+ */
+function mcp_wpsl_get_permalink_base_translations(): array {
+	$raw = get_option( MCP_WPSL_BASE_TRANSLATIONS, array() );
+	if ( ! is_array( $raw ) ) {
+		return array();
+	}
+
+	$translations = array();
+	foreach ( $raw as $language_code => $base ) {
+		$language_code = sanitize_key( (string) $language_code );
+		$base          = sanitize_title( (string) $base );
+		if ( '' === $language_code || '' === $base ) {
+			continue;
+		}
+
+		$translations[ $language_code ] = $base;
+	}
+
+	return $translations;
+}
+
+/**
+ * Return one configured translated WPSL store base.
+ */
+function mcp_wpsl_get_translated_store_base( string $language_code ): string {
+	$translations = mcp_wpsl_get_permalink_base_translations();
+	return $translations[ sanitize_key( $language_code ) ] ?? '';
+}
+
+/**
  * Return the WPML language code for a WPSL store post when WPML is available.
  */
 function mcp_wpsl_get_store_language_code( int $post_id ): string {
@@ -55,16 +88,18 @@ function mcp_wpsl_get_store_language_code( int $post_id ): string {
 }
 
 /**
- * Register the English WPSL store rewrite base.
+ * Register configured language-specific WPSL store rewrite bases.
  */
-function mcp_wpsl_register_english_store_rewrite(): void {
-	add_rewrite_rule(
-		'^en/' . MCP_WPSL_EN_STORE_BASE . '/([^/]+)/?$',
-		'index.php?post_type=wpsl_stores&name=$matches[1]&lang=en',
-		'top'
-	);
+function mcp_wpsl_register_translated_store_rewrites(): void {
+	foreach ( mcp_wpsl_get_permalink_base_translations() as $language_code => $base ) {
+		add_rewrite_rule(
+			'^' . preg_quote( $language_code, '#' ) . '/' . preg_quote( $base, '#' ) . '/([^/]+)/?$',
+			'index.php?post_type=wpsl_stores&name=$matches[1]&lang=' . $language_code,
+			'top'
+		);
+	}
 }
-add_action( 'init', 'mcp_wpsl_register_english_store_rewrite', 8 );
+add_action( 'init', 'mcp_wpsl_register_translated_store_rewrites', 8 );
 
 /**
  * Return the current request path with basic sanitization.
@@ -75,30 +110,34 @@ function mcp_wpsl_get_request_path(): string {
 }
 
 /**
- * Route the English store base to WPSL store posts even when WPML/WPSL rewrite rules miss it.
+ * Route translated store bases to WPSL store posts when WPML/WPSL rewrite rules miss them.
  *
  * @param array<string,mixed> $query_vars Parsed request query vars.
  * @return array<string,mixed>
  */
-function mcp_wpsl_route_english_store_request( array $query_vars ): array {
+function mcp_wpsl_route_translated_store_request( array $query_vars ): array {
 	$request_path = mcp_wpsl_get_request_path();
-	if ( ! preg_match( '#^/en/' . preg_quote( MCP_WPSL_EN_STORE_BASE, '#' ) . '/([^/]+)/?$#', $request_path, $matches ) ) {
+	foreach ( mcp_wpsl_get_permalink_base_translations() as $language_code => $base ) {
+		if ( ! preg_match( '#^/' . preg_quote( $language_code, '#' ) . '/' . preg_quote( $base, '#' ) . '/([^/]+)/?$#', $request_path, $matches ) ) {
+			continue;
+		}
+
+		$slug = sanitize_title( (string) $matches[1] );
+		if ( '' === $slug ) {
+			return $query_vars;
+		}
+
+		$query_vars['post_type']   = 'wpsl_stores';
+		$query_vars['name']        = $slug;
+		$query_vars['wpsl_stores'] = $slug;
+		$query_vars['lang']        = $language_code;
+
 		return $query_vars;
 	}
-
-	$slug = sanitize_title( (string) $matches[1] );
-	if ( '' === $slug ) {
-		return $query_vars;
-	}
-
-	$query_vars['post_type']   = 'wpsl_stores';
-	$query_vars['name']        = $slug;
-	$query_vars['wpsl_stores'] = $slug;
-	$query_vars['lang']        = 'en';
 
 	return $query_vars;
 }
-add_filter( 'request', 'mcp_wpsl_route_english_store_request', 1 );
+add_filter( 'request', 'mcp_wpsl_route_translated_store_request', 1 );
 
 /**
  * Flush rewrite rules once after a plugin version with rewrite changes is deployed.
@@ -115,35 +154,53 @@ function mcp_wpsl_maybe_flush_rewrite_rules(): void {
 add_action( 'init', 'mcp_wpsl_maybe_flush_rewrite_rules', 20 );
 
 /**
- * Use an English URL base for English WPML translations of WPSL stores.
+ * Use configured translated URL bases for WPML translations of WPSL stores.
  *
  * @param string  $post_link The generated permalink.
  * @param WP_Post $post      The store post.
  */
-function mcp_wpsl_filter_english_store_permalink( string $post_link, WP_Post $post ): string {
-	if ( 'wpsl_stores' !== $post->post_type || 'en' !== mcp_wpsl_get_store_language_code( (int) $post->ID ) ) {
+function mcp_wpsl_filter_translated_store_permalink( string $post_link, WP_Post $post ): string {
+	if ( 'wpsl_stores' !== $post->post_type ) {
 		return $post_link;
 	}
 
-	return trailingslashit( (string) get_option( 'home' ) ) . user_trailingslashit( 'en/' . MCP_WPSL_EN_STORE_BASE . '/' . $post->post_name );
+	$language_code = mcp_wpsl_get_store_language_code( (int) $post->ID );
+	$base          = mcp_wpsl_get_translated_store_base( $language_code );
+	if ( '' === $language_code || '' === $base ) {
+		return $post_link;
+	}
+
+	return trailingslashit( (string) get_option( 'home' ) ) . user_trailingslashit( $language_code . '/' . $base . '/' . $post->post_name );
 }
-add_filter( 'post_type_link', 'mcp_wpsl_filter_english_store_permalink', 20, 2 );
+add_filter( 'post_type_link', 'mcp_wpsl_filter_translated_store_permalink', 20, 2 );
 
 /**
- * Redirect old mixed-language English store URLs to the English canonical base.
+ * Redirect old mixed-language store URLs to their configured translated canonical base.
  */
-function mcp_wpsl_redirect_english_store_canonical_base(): void {
+function mcp_wpsl_redirect_translated_store_canonical_base(): void {
 	if ( ! is_singular( 'wpsl_stores' ) ) {
 		return;
 	}
 
 	$post_id = get_queried_object_id();
-	if ( ! $post_id || 'en' !== mcp_wpsl_get_store_language_code( (int) $post_id ) ) {
+	if ( ! $post_id ) {
+		return;
+	}
+
+	$language_code = mcp_wpsl_get_store_language_code( (int) $post_id );
+	$base          = mcp_wpsl_get_translated_store_base( $language_code );
+	if ( '' === $language_code || '' === $base ) {
+		return;
+	}
+
+	$settings    = mcp_wpsl_get_settings();
+	$source_base = isset( $settings['permalink_slug'] ) ? sanitize_title( (string) $settings['permalink_slug'] ) : '';
+	if ( '' === $source_base || $base === $source_base ) {
 		return;
 	}
 
 	$request_path = mcp_wpsl_get_request_path();
-	if ( ! str_starts_with( $request_path, '/en/butikker/' ) ) {
+	if ( ! str_starts_with( $request_path, '/' . $language_code . '/' . $source_base . '/' ) ) {
 		return;
 	}
 
@@ -153,7 +210,7 @@ function mcp_wpsl_redirect_english_store_canonical_base(): void {
 		exit;
 	}
 }
-add_action( 'template_redirect', 'mcp_wpsl_redirect_english_store_canonical_base', 1 );
+add_action( 'template_redirect', 'mcp_wpsl_redirect_translated_store_canonical_base', 1 );
 
 /**
  * Register the maintained G1 columns store-locator template with WP Store Locator.
@@ -584,6 +641,7 @@ function mcp_wpsl_register_abilities(): void {
 					'templates'        => array( 'type' => 'array' ),
 					'published_stores' => array( 'type' => 'integer' ),
 					'settings'         => array( 'type' => 'object' ),
+					'permalink_base_translations' => array( 'type' => 'object' ),
 				),
 			),
 			'execute_callback'    => static function (): array {
@@ -595,6 +653,7 @@ function mcp_wpsl_register_abilities(): void {
 					'templates'        => mcp_wpsl_list_templates(),
 					'published_stores' => mcp_wpsl_count_published_stores(),
 					'settings'         => $settings,
+					'permalink_base_translations' => mcp_wpsl_get_permalink_base_translations(),
 				);
 			},
 			'permission_callback' => static function (): bool {
@@ -912,6 +971,74 @@ function mcp_wpsl_register_abilities(): void {
 					'skipped'  => $skipped,
 					'settings' => $settings,
 					'message'  => empty( $input['dry_run'] ) ? 'WPSL settings updated.' : 'Dry run only. No settings saved.',
+				);
+			},
+			'permission_callback' => static function (): bool {
+				return current_user_can( 'manage_options' );
+			},
+			'meta'                => array(
+				'annotations' => array(
+					'readonly'    => false,
+					'destructive' => false,
+					'idempotent'  => true,
+				),
+			),
+		)
+	);
+
+	wp_register_ability(
+		'wpsl/update-permalink-base-translations',
+		array(
+			'label'               => 'Update WP Store Locator Permalink Base Translations',
+			'description'         => 'Configures language-specific WPSL store permalink bases, such as mapping en to stores, without hardcoding site-specific paths in the plugin.',
+			'category'            => 'site',
+			'input_schema'        => array(
+				'type'                 => 'object',
+				'required'             => array( 'translations' ),
+				'properties'           => array(
+					'translations' => array(
+						'type'        => 'object',
+						'description' => 'Object keyed by language code with slug base values, for example {"en":"stores"}. Empty values remove mappings.',
+					),
+					'dry_run'      => array( 'type' => 'boolean' ),
+				),
+				'additionalProperties' => false,
+			),
+			'output_schema'       => array(
+				'type'       => 'object',
+				'properties' => array(
+					'success'      => array( 'type' => 'boolean' ),
+					'previous'     => array( 'type' => 'object' ),
+					'translations' => array( 'type' => 'object' ),
+					'message'      => array( 'type' => 'string' ),
+				),
+			),
+			'execute_callback'    => static function ( $input = array() ): array {
+				$input = is_array( $input ) ? $input : array();
+				$raw   = isset( $input['translations'] ) && is_array( $input['translations'] ) ? $input['translations'] : array();
+
+				$translations = array();
+				foreach ( $raw as $language_code => $base ) {
+					$language_code = sanitize_key( (string) $language_code );
+					$base          = sanitize_title( (string) $base );
+					if ( '' === $language_code || '' === $base ) {
+						continue;
+					}
+
+					$translations[ $language_code ] = $base;
+				}
+
+				$previous = mcp_wpsl_get_permalink_base_translations();
+				if ( empty( $input['dry_run'] ) ) {
+					update_option( MCP_WPSL_BASE_TRANSLATIONS, $translations, false );
+					flush_rewrite_rules( false );
+				}
+
+				return array(
+					'success'      => true,
+					'previous'     => $previous,
+					'translations' => $translations,
+					'message'      => empty( $input['dry_run'] ) ? 'WPSL permalink base translations updated.' : 'Dry run only. No settings saved.',
 				);
 			},
 			'permission_callback' => static function (): bool {
