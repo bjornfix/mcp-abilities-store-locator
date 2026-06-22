@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Store Locator
  * Plugin URI: https://devenia.com
  * Description: Narrow MCP abilities and maintained frontend template support for WP Store Locator.
- * Version: 0.1.5
+ * Version: 0.1.6
  * Author: Devenia
  * Author URI: https://devenia.com
  * License: GPL-2.0+
@@ -22,6 +22,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 const MCP_WPSL_G1_COLUMNS_TEMPLATE = 'g1_columns';
+const MCP_WPSL_VERSION             = '0.1.6';
+const MCP_WPSL_EN_STORE_BASE       = 'stores';
 
 /**
  * Check whether WP Store Locator is active enough for settings/template work.
@@ -37,6 +39,89 @@ function mcp_wpsl_get_settings(): array {
 	$settings = get_option( 'wpsl_settings', array() );
 	return is_array( $settings ) ? $settings : array();
 }
+
+/**
+ * Return the WPML language code for a WPSL store post when WPML is available.
+ */
+function mcp_wpsl_get_store_language_code( int $post_id ): string {
+	global $sitepress;
+
+	if ( is_object( $sitepress ) && method_exists( $sitepress, 'get_language_for_element' ) ) {
+		$language_code = $sitepress->get_language_for_element( $post_id, 'post_wpsl_stores' );
+		return is_string( $language_code ) ? $language_code : '';
+	}
+
+	return '';
+}
+
+/**
+ * Register the English WPSL store rewrite base.
+ */
+function mcp_wpsl_register_english_store_rewrite(): void {
+	add_rewrite_rule(
+		'^en/' . MCP_WPSL_EN_STORE_BASE . '/([^/]+)/?$',
+		'index.php?wpsl_stores=$matches[1]&lang=en',
+		'top'
+	);
+}
+add_action( 'init', 'mcp_wpsl_register_english_store_rewrite', 8 );
+
+/**
+ * Flush rewrite rules once after a plugin version with rewrite changes is deployed.
+ */
+function mcp_wpsl_maybe_flush_rewrite_rules(): void {
+	$stored_version = get_option( 'mcp_wpsl_version', '' );
+	if ( MCP_WPSL_VERSION === $stored_version ) {
+		return;
+	}
+
+	flush_rewrite_rules( false );
+	update_option( 'mcp_wpsl_version', MCP_WPSL_VERSION, false );
+}
+add_action( 'init', 'mcp_wpsl_maybe_flush_rewrite_rules', 20 );
+
+/**
+ * Use an English URL base for English WPML translations of WPSL stores.
+ *
+ * @param string  $post_link The generated permalink.
+ * @param WP_Post $post      The store post.
+ */
+function mcp_wpsl_filter_english_store_permalink( string $post_link, WP_Post $post ): string {
+	if ( 'wpsl_stores' !== $post->post_type || 'en' !== mcp_wpsl_get_store_language_code( (int) $post->ID ) ) {
+		return $post_link;
+	}
+
+	return home_url( user_trailingslashit( 'en/' . MCP_WPSL_EN_STORE_BASE . '/' . $post->post_name ) );
+}
+add_filter( 'post_type_link', 'mcp_wpsl_filter_english_store_permalink', 20, 2 );
+
+/**
+ * Redirect old mixed-language English store URLs to the English canonical base.
+ */
+function mcp_wpsl_redirect_english_store_canonical_base(): void {
+	if ( ! is_singular( 'wpsl_stores' ) ) {
+		return;
+	}
+
+	$post_id = get_queried_object_id();
+	if ( ! $post_id || 'en' !== mcp_wpsl_get_store_language_code( (int) $post_id ) ) {
+		return;
+	}
+
+	$request_uri  = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REQUEST_URI'] ) ) : '';
+	$request_path = $request_uri;
+	$request_path = (string) strtok( $request_path, '?' );
+	if ( ! str_starts_with( $request_path, '/en/butikker/' ) ) {
+		return;
+	}
+
+	$canonical = get_permalink( $post_id );
+	if ( $canonical ) {
+		wp_safe_redirect( $canonical, 301 );
+		exit;
+	}
+}
+add_action( 'template_redirect', 'mcp_wpsl_redirect_english_store_canonical_base', 1 );
 
 /**
  * Register the maintained G1 columns store-locator template with WP Store Locator.
@@ -86,7 +171,7 @@ function mcp_wpsl_enqueue_columns_template_style(): void {
 		return;
 	}
 
-	wp_register_style( 'mcp-wpsl-columns-template', false, array(), '0.1.5' );
+	wp_register_style( 'mcp-wpsl-columns-template', false, array(), MCP_WPSL_VERSION );
 	wp_enqueue_style( 'mcp-wpsl-columns-template' );
 	wp_add_inline_style( 'mcp-wpsl-columns-template', $css );
 }
