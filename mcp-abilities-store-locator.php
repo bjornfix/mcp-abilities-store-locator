@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Store Locator
  * Plugin URI: https://devenia.com
  * Description: Narrow MCP abilities and maintained frontend template support for WP Store Locator.
- * Version: 0.1.15
+ * Version: 0.1.16
  * Author: Devenia
  * Author URI: https://devenia.com
  * License: GPL-2.0+
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 const MCP_WPSL_COLUMNS_TEMPLATE = 'dynamic_columns';
-const MCP_WPSL_VERSION             = '0.1.15';
+const MCP_WPSL_VERSION             = '0.1.16';
 const MCP_WPSL_BASE_TRANSLATIONS   = 'mcp_wpsl_permalink_base_translations';
 const MCP_WPSL_LABEL_TRANSLATIONS  = 'mcp_wpsl_label_translations';
 const MCP_WPSL_NAV_SOURCE_LINKS    = 'mcp_wpsl_nav_source_language_links';
@@ -334,6 +334,12 @@ function mcp_wpsl_get_source_store_nav_label( int $source_post_id, string $sourc
 		return '';
 	}
 
+	static $labels = array();
+	$cache_key = $source_language_code . ':' . $source_post_id;
+	if ( array_key_exists( $cache_key, $labels ) ) {
+		return $labels[ $cache_key ];
+	}
+
 	$fallback_label = '';
 	$menus          = wp_get_nav_menus();
 	foreach ( $menus as $menu ) {
@@ -368,12 +374,14 @@ function mcp_wpsl_get_source_store_nav_label( int $source_post_id, string $sourc
 
 			$menu_item_language = mcp_wpsl_get_post_language_code( (int) $menu_item->ID, 'nav_menu_item' );
 			if ( $source_language_code === $menu_item_language ) {
-				return $label;
+				$labels[ $cache_key ] = $label;
+				return $labels[ $cache_key ];
 			}
 		}
 	}
 
-	return $fallback_label;
+	$labels[ $cache_key ] = $fallback_label;
+	return $labels[ $cache_key ];
 }
 
 /**
@@ -398,14 +406,23 @@ function mcp_wpsl_get_nav_store_source_render_data( object $item ): array {
 		return array( 'url' => '', 'title' => '', 'source_post_id' => 0 );
 	}
 
+	$original_post_id = (int) $item->object_id;
+	static $render_data = array();
+	$cache_key = $language_code . ':' . $source_language_code . ':' . $original_post_id;
+	if ( array_key_exists( $cache_key, $render_data ) ) {
+		return $render_data[ $cache_key ];
+	}
+
 	$source_post_id = mcp_wpsl_get_store_post_in_language( (int) $item->object_id, $source_language_code );
 	if ( ! $source_post_id ) {
-		return array( 'url' => '', 'title' => '', 'source_post_id' => 0 );
+		$render_data[ $cache_key ] = array( 'url' => '', 'title' => '', 'source_post_id' => 0 );
+		return $render_data[ $cache_key ];
 	}
 
 	$source_post = get_post( $source_post_id );
 	if ( ! $source_post || 'wpsl_stores' !== $source_post->post_type || 'publish' !== $source_post->post_status ) {
-		return array( 'url' => '', 'title' => '', 'source_post_id' => 0 );
+		$render_data[ $cache_key ] = array( 'url' => '', 'title' => '', 'source_post_id' => 0 );
+		return $render_data[ $cache_key ];
 	}
 
 	call_user_func_array( 'do_action', array( 'wpml_switch_language', $source_language_code ) );
@@ -416,11 +433,13 @@ function mcp_wpsl_get_nav_store_source_render_data( object $item ): array {
 		call_user_func_array( 'do_action', array( 'wpml_switch_language', $language_code ) );
 	}
 
-	return array(
+	$render_data[ $cache_key ] = array(
 		'url'            => $source_permalink ? (string) $source_permalink : '',
 		'title'          => $source_label,
 		'source_post_id' => $source_post_id,
 	);
+
+	return $render_data[ $cache_key ];
 }
 
 /**
