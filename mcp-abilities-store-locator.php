@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Store Locator
  * Plugin URI: https://devenia.com
  * Description: Narrow MCP abilities and maintained frontend template support for WP Store Locator.
- * Version: 0.1.10
+ * Version: 0.1.11
  * Author: Devenia
  * Author URI: https://devenia.com
  * License: GPL-2.0+
@@ -22,8 +22,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 const MCP_WPSL_COLUMNS_TEMPLATE = 'dynamic_columns';
-const MCP_WPSL_VERSION          = '0.1.10';
+const MCP_WPSL_VERSION             = '0.1.11';
 const MCP_WPSL_BASE_TRANSLATIONS   = 'mcp_wpsl_permalink_base_translations';
+const MCP_WPSL_LABEL_TRANSLATIONS  = 'mcp_wpsl_label_translations';
 
 /**
  * Check whether WP Store Locator is active enough for settings/template work.
@@ -71,6 +72,121 @@ function mcp_wpsl_get_permalink_base_translations(): array {
 function mcp_wpsl_get_translated_store_base( string $language_code ): string {
 	$translations = mcp_wpsl_get_permalink_base_translations();
 	return $translations[ sanitize_key( $language_code ) ] ?? '';
+}
+
+/**
+ * Return the active frontend language code from WPML, Polylang, or locale.
+ */
+function mcp_wpsl_current_language_code(): string {
+	$wpml_language = call_user_func_array( 'apply_filters', array( 'wpml_current_language', null ) );
+	if ( is_string( $wpml_language ) && '' !== $wpml_language ) {
+		return sanitize_key( $wpml_language );
+	}
+
+	if ( function_exists( 'pll_current_language' ) ) {
+		$polylang_language = pll_current_language( 'slug' );
+		if ( is_string( $polylang_language ) && '' !== $polylang_language ) {
+			return sanitize_key( $polylang_language );
+		}
+	}
+
+	$locale = determine_locale();
+	if ( is_string( $locale ) && '' !== $locale ) {
+		return sanitize_key( substr( $locale, 0, 2 ) );
+	}
+
+	return '';
+}
+
+/**
+ * WPSL label keys supported by the language-specific label translation option.
+ *
+ * @return array<int,string>
+ */
+function mcp_wpsl_supported_label_keys(): array {
+	return array(
+		'search_label',
+		'search_btn_label',
+		'preloader_label',
+		'radius_label',
+		'no_results_label',
+		'results_label',
+		'more_label',
+		'directions_label',
+		'no_directions_label',
+		'back_label',
+		'street_view_label',
+		'zoom_here_label',
+		'error_label',
+		'phone_label',
+		'fax_label',
+		'email_label',
+		'url_label',
+		'hours_label',
+		'start_label',
+		'limit_label',
+		'category_label',
+		'category_default_label',
+	);
+}
+
+/**
+ * Sanitize language-specific WPSL label translations.
+ *
+ * @param mixed $raw Raw option/input.
+ * @return array<string,array<string,string>>
+ */
+function mcp_wpsl_sanitize_label_translations( $raw ): array {
+	if ( ! is_array( $raw ) ) {
+		return array();
+	}
+
+	$supported    = mcp_wpsl_supported_label_keys();
+	$translations = array();
+	foreach ( $raw as $language_code => $labels ) {
+		$language_code = sanitize_key( (string) $language_code );
+		if ( '' === $language_code || ! is_array( $labels ) ) {
+			continue;
+		}
+
+		foreach ( $labels as $key => $value ) {
+			$key = sanitize_key( (string) $key );
+			if ( ! in_array( $key, $supported, true ) ) {
+				continue;
+			}
+
+			$value = sanitize_text_field( (string) $value );
+			if ( '' === $value ) {
+				continue;
+			}
+
+			$translations[ $language_code ][ $key ] = $value;
+		}
+	}
+
+	return $translations;
+}
+
+/**
+ * Return configured language-specific WPSL label translations.
+ *
+ * @return array<string,array<string,string>>
+ */
+function mcp_wpsl_get_label_translations(): array {
+	return mcp_wpsl_sanitize_label_translations( get_option( MCP_WPSL_LABEL_TRANSLATIONS, array() ) );
+}
+
+/**
+ * Translate a WPSL setting label for the active frontend language when configured.
+ */
+function mcp_wpsl_translate_setting_label( string $key, string $fallback ): string {
+	$language_code = mcp_wpsl_current_language_code();
+	if ( '' === $language_code ) {
+		return $fallback;
+	}
+
+	$translations = mcp_wpsl_get_label_translations();
+	return $translations[ $language_code ][ sanitize_key( $key ) ] ?? $fallback;
 }
 
 /**
@@ -642,6 +758,7 @@ function mcp_wpsl_register_abilities(): void {
 					'published_stores' => array( 'type' => 'integer' ),
 					'settings'         => array( 'type' => 'object' ),
 					'permalink_base_translations' => array( 'type' => 'object' ),
+					'label_translations' => array( 'type' => 'object' ),
 				),
 			),
 			'execute_callback'    => static function (): array {
@@ -654,6 +771,7 @@ function mcp_wpsl_register_abilities(): void {
 					'published_stores' => mcp_wpsl_count_published_stores(),
 					'settings'         => $settings,
 					'permalink_base_translations' => mcp_wpsl_get_permalink_base_translations(),
+					'label_translations' => mcp_wpsl_get_label_translations(),
 				);
 			},
 			'permission_callback' => static function (): bool {
@@ -1039,6 +1157,63 @@ function mcp_wpsl_register_abilities(): void {
 					'previous'     => $previous,
 					'translations' => $translations,
 					'message'      => empty( $input['dry_run'] ) ? 'WPSL permalink base translations updated.' : 'Dry run only. No settings saved.',
+				);
+			},
+			'permission_callback' => static function (): bool {
+				return current_user_can( 'manage_options' );
+			},
+			'meta'                => array(
+				'annotations' => array(
+					'readonly'    => false,
+					'destructive' => false,
+					'idempotent'  => true,
+				),
+			),
+		)
+	);
+
+	wp_register_ability(
+		'wpsl/update-label-translations',
+		array(
+			'label'               => 'Update WP Store Locator Label Translations',
+			'description'         => 'Configures language-specific WPSL frontend labels without changing the global Store Locator settings.',
+			'category'            => 'site',
+			'input_schema'        => array(
+				'type'                 => 'object',
+				'required'             => array( 'translations' ),
+				'properties'           => array(
+					'translations' => array(
+						'type'        => 'object',
+						'description' => 'Object keyed by language code with WPSL label keys, for example {"en":{"search_label":"Location/city","search_btn_label":"Search"}}. Empty values remove mappings.',
+					),
+					'dry_run'      => array( 'type' => 'boolean' ),
+				),
+				'additionalProperties' => false,
+			),
+			'output_schema'       => array(
+				'type'       => 'object',
+				'properties' => array(
+					'success'      => array( 'type' => 'boolean' ),
+					'previous'     => array( 'type' => 'object' ),
+					'translations' => array( 'type' => 'object' ),
+					'message'      => array( 'type' => 'string' ),
+				),
+			),
+			'execute_callback'    => static function ( $input = array() ): array {
+				$input        = is_array( $input ) ? $input : array();
+				$translations = mcp_wpsl_sanitize_label_translations( $input['translations'] ?? array() );
+				$previous     = mcp_wpsl_get_label_translations();
+
+				if ( empty( $input['dry_run'] ) ) {
+					update_option( MCP_WPSL_LABEL_TRANSLATIONS, $translations, false );
+					mcp_wpsl_clear_transients();
+				}
+
+				return array(
+					'success'      => true,
+					'previous'     => $previous,
+					'translations' => $translations,
+					'message'      => empty( $input['dry_run'] ) ? 'WPSL label translations updated.' : 'Dry run only. No settings saved.',
 				);
 			},
 			'permission_callback' => static function (): bool {

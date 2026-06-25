@@ -8,7 +8,7 @@ Store Locator maintenance abilities for MCP.
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-purple.svg)](https://php.net)
 
 **Tested up to:** 7.0
-**Stable tag:** 0.1.10
+**Stable tag:** 0.1.11
 **License:** GPLv2 or later
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -111,13 +111,14 @@ If you are new to the stack, use this order:
 
 If you skip base-stack verification and start with add-ons immediately, troubleshooting gets harder than it needs to be.
 
-## Abilities (10)
+## Abilities (11)
 
 | Ability | Description |
 |---------|-------------|
 | `wpsl/get-status` | Read Store Locator availability, settings, templates, and published store count |
 | `wpsl/update-settings` | Update supported Store Locator settings with Store Locator-aware validation |
 | `wpsl/update-permalink-base-translations` | Configure translated Store Locator permalink bases |
+| `wpsl/update-label-translations` | Configure language-specific Store Locator frontend labels |
 | `wpsl/set-template` | Set the active Store Locator search template by installed template ID |
 | `wpsl/list-stores` | List real Store Locator store posts with address/contact/location metadata |
 | `wpsl/get-store` | Read one real Store Locator store post and its locator metadata |
@@ -134,6 +135,22 @@ If you skip base-stack verification and start with add-ons immediately, troubles
 {
   "ability_name": "wpsl/get-status",
   "parameters": {}
+}
+```
+
+### Translate Frontend Labels Per Language
+
+```json
+{
+  "ability_name": "wpsl/update-label-translations",
+  "parameters": {
+    "translations": {
+      "en": {
+        "search_label": "Location/city",
+        "search_btn_label": "Search"
+      }
+    }
+  }
 }
 ```
 
@@ -192,6 +209,10 @@ If you skip base-stack verification and start with add-ons immediately, troubles
 - The frontend template preserves the Store Locator shortcode, map, search form, AJAX result list, and cache behavior.
 
 ## Changelog
+
+### 0.1.11
+
+- Added configurable language-specific frontend label translations for the maintained Store Locator template.
 
 ### 0.1.10
 

@@ -24,6 +24,11 @@ $search_button  = ! empty( $wpsl_settings['search_btn_label'] )
 	? (string) $wpsl_settings['search_btn_label']
 	: $wpsl->i18n->get_translation( 'search_btn_label', __( 'Search', 'mcp-abilities-store-locator' ) );
 
+if ( function_exists( 'mcp_wpsl_translate_setting_label' ) ) {
+	$search_label  = mcp_wpsl_translate_setting_label( 'search_label', $search_label );
+	$search_button = mcp_wpsl_translate_setting_label( 'search_btn_label', $search_button );
+}
+
 $output .= '<div id="wpsl-wrap" class="wpsl-store-below mcp-wpsl-columns">' . "\r\n";
 $output .= "\t" . '<div class="wpsl-search wpsl-clearfix ' . $this->get_css_classes() . '">' . "\r\n";
 $output .= "\t\t" . '<div id="wpsl-search-wrap">' . "\r\n";
