@@ -8,7 +8,7 @@ Store Locator maintenance abilities for MCP.
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-purple.svg)](https://php.net)
 
 **Tested up to:** 7.0
-**Stable tag:** 0.1.11
+**Stable tag:** 0.1.15
 **License:** GPLv2 or later
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -48,6 +48,7 @@ This plugin is different because the agent can act inside the site through a nar
 - update supported store metadata without touching page-builder content
 - switch to a maintained Store Locator template instead of creating manual cards
 - clear locator cache after a real data or template change
+- keep native Store Locator menu items while rendering selected frontend languages with source-language store links and menu labels
 
 That changes the experience from:
 

@@ -4,7 +4,7 @@ Tags: mcp, ai, automation, abilities-api, store-locator
 Requires at least: 6.9
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.1.11
+Stable tag: 0.1.15
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.txt
 
@@ -17,6 +17,18 @@ Adds authenticated WordPress Abilities API tools for WP Store Locator maintenanc
 The abilities cover WPSL status, settings, templates, stores, categories, and transient cleanup. The plugin does not duplicate store content into Elementor or static page content. Store data remains owned by WP Store Locator.
 
 == Changelog ==
+
+= 0.1.15 =
+* Resolved source-language store menu permalinks under WPML by switching language while reading source menu data.
+
+= 0.1.14 =
+* Added URL-prefix language detection and final native walker output handling for multilingual store menus.
+
+= 0.1.13 =
+* Applied source-language native menu rendering at the final menu title and link output stage.
+
+= 0.1.12 =
+* Added configurable native menu source-language rendering for WPSL store menu items.
 
 = 0.1.11 =
 * Added configurable language-specific frontend label translations for the maintained Store Locator template.

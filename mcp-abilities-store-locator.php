@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Store Locator
  * Plugin URI: https://devenia.com
  * Description: Narrow MCP abilities and maintained frontend template support for WP Store Locator.
- * Version: 0.1.11
+ * Version: 0.1.15
  * Author: Devenia
  * Author URI: https://devenia.com
  * License: GPL-2.0+
@@ -22,9 +22,34 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 const MCP_WPSL_COLUMNS_TEMPLATE = 'dynamic_columns';
-const MCP_WPSL_VERSION             = '0.1.11';
+const MCP_WPSL_VERSION             = '0.1.15';
 const MCP_WPSL_BASE_TRANSLATIONS   = 'mcp_wpsl_permalink_base_translations';
 const MCP_WPSL_LABEL_TRANSLATIONS  = 'mcp_wpsl_label_translations';
+const MCP_WPSL_NAV_SOURCE_LINKS    = 'mcp_wpsl_nav_source_language_links';
+
+/**
+ * Return configured language codes that may be visible in frontend URL prefixes.
+ *
+ * @return array<int,string>
+ */
+function mcp_wpsl_get_configured_language_codes(): array {
+	$codes = array();
+
+	foreach ( array_keys( mcp_wpsl_get_permalink_base_translations() ) as $language_code ) {
+		$codes[] = sanitize_key( (string) $language_code );
+	}
+
+	foreach ( array_keys( mcp_wpsl_get_label_translations() ) as $language_code ) {
+		$codes[] = sanitize_key( (string) $language_code );
+	}
+
+	foreach ( mcp_wpsl_get_nav_source_language_links() as $language_code => $source_language_code ) {
+		$codes[] = sanitize_key( (string) $language_code );
+		$codes[] = sanitize_key( (string) $source_language_code );
+	}
+
+	return array_values( array_filter( array_unique( $codes ) ) );
+}
 
 /**
  * Check whether WP Store Locator is active enough for settings/template work.
@@ -78,6 +103,14 @@ function mcp_wpsl_get_translated_store_base( string $language_code ): string {
  * Return the active frontend language code from WPML, Polylang, or locale.
  */
 function mcp_wpsl_current_language_code(): string {
+	$request_path = mcp_wpsl_get_request_path();
+	if ( preg_match( '#^/([a-z]{2}(?:-[a-z0-9]+)?)(?:/|$)#i', $request_path, $matches ) ) {
+		$request_language = sanitize_key( (string) $matches[1] );
+		if ( in_array( $request_language, mcp_wpsl_get_configured_language_codes(), true ) ) {
+			return $request_language;
+		}
+	}
+
 	$wpml_language = call_user_func_array( 'apply_filters', array( 'wpml_current_language', null ) );
 	if ( is_string( $wpml_language ) && '' !== $wpml_language ) {
 		return sanitize_key( $wpml_language );
@@ -177,6 +210,40 @@ function mcp_wpsl_get_label_translations(): array {
 }
 
 /**
+ * Sanitize language-specific nav source language mappings.
+ *
+ * @param mixed $raw Raw option/input.
+ * @return array<string,string>
+ */
+function mcp_wpsl_sanitize_nav_source_language_links( $raw ): array {
+	if ( ! is_array( $raw ) ) {
+		return array();
+	}
+
+	$mappings = array();
+	foreach ( $raw as $language_code => $source_language_code ) {
+		$language_code        = sanitize_key( (string) $language_code );
+		$source_language_code = sanitize_key( (string) $source_language_code );
+		if ( '' === $language_code || '' === $source_language_code || $language_code === $source_language_code ) {
+			continue;
+		}
+
+		$mappings[ $language_code ] = $source_language_code;
+	}
+
+	return $mappings;
+}
+
+/**
+ * Return configured language-specific native menu source language mappings.
+ *
+ * @return array<string,string>
+ */
+function mcp_wpsl_get_nav_source_language_links(): array {
+	return mcp_wpsl_sanitize_nav_source_language_links( get_option( MCP_WPSL_NAV_SOURCE_LINKS, array() ) );
+}
+
+/**
  * Translate a WPSL setting label for the active frontend language when configured.
  */
 function mcp_wpsl_translate_setting_label( string $key, string $fallback ): string {
@@ -201,6 +268,159 @@ function mcp_wpsl_get_store_language_code( int $post_id ): string {
 	}
 
 	return '';
+}
+
+/**
+ * Return a WPML/Polylang post language code for a post when available.
+ */
+function mcp_wpsl_get_post_language_code( int $post_id, string $post_type ): string {
+	$wpml_details = call_user_func_array(
+		'apply_filters',
+		array(
+			'wpml_element_language_details',
+			null,
+			array(
+				'element_id'   => $post_id,
+				'element_type' => 'post_' . $post_type,
+			),
+		)
+	);
+
+	if ( is_object( $wpml_details ) && isset( $wpml_details->language_code ) && is_string( $wpml_details->language_code ) ) {
+		return sanitize_key( $wpml_details->language_code );
+	}
+
+	if ( function_exists( 'pll_get_post_language' ) ) {
+		$polylang_language = pll_get_post_language( $post_id, 'slug' );
+		if ( is_string( $polylang_language ) && '' !== $polylang_language ) {
+			return sanitize_key( $polylang_language );
+		}
+	}
+
+	return '';
+}
+
+/**
+ * Return a WPSL store post translated into the requested language when possible.
+ */
+function mcp_wpsl_get_store_post_in_language( int $post_id, string $language_code ): int {
+	$language_code = sanitize_key( $language_code );
+	if ( '' === $language_code || ! $post_id ) {
+		return 0;
+	}
+
+	$wpml_post_id = call_user_func_array( 'apply_filters', array( 'wpml_object_id', $post_id, 'wpsl_stores', false, $language_code ) );
+	if ( is_numeric( $wpml_post_id ) && (int) $wpml_post_id > 0 ) {
+		return (int) $wpml_post_id;
+	}
+
+	if ( function_exists( 'pll_get_post' ) ) {
+		$polylang_post_id = pll_get_post( $post_id, $language_code );
+		if ( is_numeric( $polylang_post_id ) && (int) $polylang_post_id > 0 ) {
+			return (int) $polylang_post_id;
+		}
+	}
+
+	$current_language = mcp_wpsl_get_post_language_code( $post_id, 'wpsl_stores' );
+	return $language_code === $current_language ? $post_id : 0;
+}
+
+/**
+ * Find the native menu label used by a source-language WPSL store menu item.
+ */
+function mcp_wpsl_get_source_store_nav_label( int $source_post_id, string $source_language_code ): string {
+	$source_language_code = sanitize_key( $source_language_code );
+	if ( ! $source_post_id || '' === $source_language_code ) {
+		return '';
+	}
+
+	$fallback_label = '';
+	$menus          = wp_get_nav_menus();
+	foreach ( $menus as $menu ) {
+		$menu_items = wp_get_nav_menu_items(
+			$menu,
+			array(
+				'update_post_term_cache' => false,
+			)
+		);
+		if ( ! is_array( $menu_items ) ) {
+			continue;
+		}
+
+		foreach ( $menu_items as $menu_item ) {
+			if (
+				! is_object( $menu_item )
+				|| 'post_type' !== ( $menu_item->type ?? '' )
+				|| 'wpsl_stores' !== ( $menu_item->object ?? '' )
+				|| $source_post_id !== (int) ( $menu_item->object_id ?? 0 )
+			) {
+				continue;
+			}
+
+			$label = trim( (string) ( $menu_item->title ?? '' ) );
+			if ( '' === $label ) {
+				continue;
+			}
+
+			if ( '' === $fallback_label ) {
+				$fallback_label = $label;
+			}
+
+			$menu_item_language = mcp_wpsl_get_post_language_code( (int) $menu_item->ID, 'nav_menu_item' );
+			if ( $source_language_code === $menu_item_language ) {
+				return $label;
+			}
+		}
+	}
+
+	return $fallback_label;
+}
+
+/**
+ * Return source-language render data for a native WPSL store menu item.
+ *
+ * @param object $item WordPress menu item object.
+ * @return array{url:string,title:string,source_post_id:int}
+ */
+function mcp_wpsl_get_nav_store_source_render_data( object $item ): array {
+	if ( ! isset( $item->object, $item->object_id ) || 'wpsl_stores' !== $item->object ) {
+		return array( 'url' => '', 'title' => '', 'source_post_id' => 0 );
+	}
+
+	$language_code = mcp_wpsl_current_language_code();
+	if ( '' === $language_code ) {
+		return array( 'url' => '', 'title' => '', 'source_post_id' => 0 );
+	}
+
+	$mappings             = mcp_wpsl_get_nav_source_language_links();
+	$source_language_code = $mappings[ $language_code ] ?? '';
+	if ( '' === $source_language_code ) {
+		return array( 'url' => '', 'title' => '', 'source_post_id' => 0 );
+	}
+
+	$source_post_id = mcp_wpsl_get_store_post_in_language( (int) $item->object_id, $source_language_code );
+	if ( ! $source_post_id ) {
+		return array( 'url' => '', 'title' => '', 'source_post_id' => 0 );
+	}
+
+	$source_post = get_post( $source_post_id );
+	if ( ! $source_post || 'wpsl_stores' !== $source_post->post_type || 'publish' !== $source_post->post_status ) {
+		return array( 'url' => '', 'title' => '', 'source_post_id' => 0 );
+	}
+
+	call_user_func_array( 'do_action', array( 'wpml_switch_language', $source_language_code ) );
+	try {
+		$source_permalink = get_permalink( $source_post_id );
+		$source_label     = mcp_wpsl_get_source_store_nav_label( $source_post_id, $source_language_code );
+	} finally {
+		call_user_func_array( 'do_action', array( 'wpml_switch_language', $language_code ) );
+	}
+
+	return array(
+		'url'            => $source_permalink ? (string) $source_permalink : '',
+		'title'          => $source_label,
+		'source_post_id' => $source_post_id,
+	);
 }
 
 /**
@@ -327,6 +547,96 @@ function mcp_wpsl_redirect_translated_store_canonical_base(): void {
 	}
 }
 add_action( 'template_redirect', 'mcp_wpsl_redirect_translated_store_canonical_base', 1 );
+
+/**
+ * Let configured frontend languages render native WPSL store menu items with source-language links and labels.
+ *
+ * The menu items remain normal WordPress post_type menu items. This only adjusts
+ * the rendered output after multilingual plugins have resolved their objects.
+ *
+ * @param array<int,WP_Post> $items Menu item objects.
+ * @return array<int,WP_Post>
+ */
+function mcp_wpsl_filter_nav_store_source_language_links( array $items ): array {
+	foreach ( $items as $item ) {
+		if ( ! is_object( $item ) ) {
+			continue;
+		}
+
+		$source_data = mcp_wpsl_get_nav_store_source_render_data( $item );
+		if ( '' !== $source_data['url'] ) {
+			$item->url = $source_data['url'];
+		}
+
+		if ( '' !== $source_data['title'] ) {
+			$item->title = $source_data['title'];
+		}
+
+		if ( $source_data['source_post_id'] ) {
+			$item->object_id = $source_data['source_post_id'];
+		}
+	}
+
+	return $items;
+}
+add_filter( 'wp_nav_menu_objects', 'mcp_wpsl_filter_nav_store_source_language_links', 50 );
+
+/**
+ * Override WPSL store menu link href late in native menu rendering.
+ *
+ * @param array<string,string> $attributes Link attributes.
+ * @param object               $item       Menu item object.
+ * @return array<string,string>
+ */
+function mcp_wpsl_filter_nav_store_source_link_attributes( array $attributes, object $item ): array {
+	$source_data = mcp_wpsl_get_nav_store_source_render_data( $item );
+	if ( '' !== $source_data['url'] ) {
+		$attributes['href'] = $source_data['url'];
+	}
+
+	return $attributes;
+}
+add_filter( 'nav_menu_link_attributes', 'mcp_wpsl_filter_nav_store_source_link_attributes', 1000, 2 );
+
+/**
+ * Override WPSL store menu labels late in native menu rendering.
+ */
+function mcp_wpsl_filter_nav_store_source_title( string $title, object $item ): string {
+	$source_data = mcp_wpsl_get_nav_store_source_render_data( $item );
+	return '' !== $source_data['title'] ? $source_data['title'] : $title;
+}
+add_filter( 'nav_menu_item_title', 'mcp_wpsl_filter_nav_store_source_title', 1000, 2 );
+
+/**
+ * Override final native walker output for menu renderers that rewrite item links after earlier filters.
+ */
+function mcp_wpsl_filter_nav_store_source_start_element( string $item_output, object $item ): string {
+	$source_data = mcp_wpsl_get_nav_store_source_render_data( $item );
+	if ( '' === $source_data['url'] && '' === $source_data['title'] ) {
+		return $item_output;
+	}
+
+	if ( '' !== $source_data['url'] ) {
+		$item_output = preg_replace(
+			'/href=([\'"])[^\'"]*\\1/',
+			'href="' . esc_url( $source_data['url'] ) . '"',
+			$item_output,
+			1
+		) ?? $item_output;
+	}
+
+	if ( '' !== $source_data['title'] ) {
+		$item_output = preg_replace(
+			'#(<a\b[^>]*>).*?(</a>)#s',
+			'$1' . esc_html( $source_data['title'] ) . '$2',
+			$item_output,
+			1
+		) ?? $item_output;
+	}
+
+	return $item_output;
+}
+add_filter( 'walker_nav_menu_start_el', 'mcp_wpsl_filter_nav_store_source_start_element', 1000, 2 );
 
 /**
  * Register the maintained columns store-locator template with WP Store Locator.
@@ -759,6 +1069,7 @@ function mcp_wpsl_register_abilities(): void {
 					'settings'         => array( 'type' => 'object' ),
 					'permalink_base_translations' => array( 'type' => 'object' ),
 					'label_translations' => array( 'type' => 'object' ),
+					'navigation_source_language_links' => array( 'type' => 'object' ),
 				),
 			),
 			'execute_callback'    => static function (): array {
@@ -772,6 +1083,7 @@ function mcp_wpsl_register_abilities(): void {
 					'settings'         => $settings,
 					'permalink_base_translations' => mcp_wpsl_get_permalink_base_translations(),
 					'label_translations' => mcp_wpsl_get_label_translations(),
+					'navigation_source_language_links' => mcp_wpsl_get_nav_source_language_links(),
 				);
 			},
 			'permission_callback' => static function (): bool {
@@ -1214,6 +1526,62 @@ function mcp_wpsl_register_abilities(): void {
 					'previous'     => $previous,
 					'translations' => $translations,
 					'message'      => empty( $input['dry_run'] ) ? 'WPSL label translations updated.' : 'Dry run only. No settings saved.',
+				);
+			},
+			'permission_callback' => static function (): bool {
+				return current_user_can( 'manage_options' );
+			},
+			'meta'                => array(
+				'annotations' => array(
+					'readonly'    => false,
+					'destructive' => false,
+					'idempotent'  => true,
+				),
+			),
+		)
+	);
+
+	wp_register_ability(
+		'wpsl/update-navigation-source-language-links',
+		array(
+			'label'               => 'Update WP Store Locator Navigation Source Language Links',
+			'description'         => 'Configures frontend languages where native WPSL store menu items should render with source-language store links and native source menu labels.',
+			'category'            => 'site',
+			'input_schema'        => array(
+				'type'                 => 'object',
+				'required'             => array( 'mappings' ),
+				'properties'           => array(
+					'mappings' => array(
+						'type'        => 'object',
+						'description' => 'Object keyed by frontend language code with source language code values, for example {"en":"no"}. Empty or same-language values remove mappings.',
+					),
+					'dry_run'  => array( 'type' => 'boolean' ),
+				),
+				'additionalProperties' => false,
+			),
+			'output_schema'       => array(
+				'type'       => 'object',
+				'properties' => array(
+					'success'  => array( 'type' => 'boolean' ),
+					'previous' => array( 'type' => 'object' ),
+					'mappings' => array( 'type' => 'object' ),
+					'message'  => array( 'type' => 'string' ),
+				),
+			),
+			'execute_callback'    => static function ( $input = array() ): array {
+				$input    = is_array( $input ) ? $input : array();
+				$mappings = mcp_wpsl_sanitize_nav_source_language_links( $input['mappings'] ?? array() );
+				$previous = mcp_wpsl_get_nav_source_language_links();
+
+				if ( empty( $input['dry_run'] ) ) {
+					update_option( MCP_WPSL_NAV_SOURCE_LINKS, $mappings, false );
+				}
+
+				return array(
+					'success'  => true,
+					'previous' => $previous,
+					'mappings' => $mappings,
+					'message'  => empty( $input['dry_run'] ) ? 'WPSL navigation source language links updated.' : 'Dry run only. No settings saved.',
 				);
 			},
 			'permission_callback' => static function (): bool {
