@@ -3,9 +3,9 @@
  * Plugin Name: MCP Abilities - Store Locator
  * Plugin URI: https://devenia.com
  * Description: Narrow MCP abilities and maintained frontend template support for WP Store Locator.
- * Version: 0.1.16
- * Author: Devenia
- * Author URI: https://devenia.com
+ * Version: 0.1.17
+ * Author: basicus
+ * Author URI: https://profiles.wordpress.org/basicus/
  * License: GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
  * Requires at least: 6.9
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 const MCP_WPSL_COLUMNS_TEMPLATE = 'dynamic_columns';
-const MCP_WPSL_VERSION             = '0.1.16';
+const MCP_WPSL_VERSION             = '0.1.17';
 const MCP_WPSL_BASE_TRANSLATIONS   = 'mcp_wpsl_permalink_base_translations';
 const MCP_WPSL_LABEL_TRANSLATIONS  = 'mcp_wpsl_label_translations';
 const MCP_WPSL_NAV_SOURCE_LINKS    = 'mcp_wpsl_nav_source_language_links';
@@ -724,60 +724,6 @@ function mcp_wpsl_columns_listing_template( string $template ): string {
 	return str_replace( '<li data-store-id="<%= id %>">', '<li class="mcp-wpsl-card" data-store-id="<%= id %>">', $template );
 }
 add_filter( 'wpsl_listing_template', 'mcp_wpsl_columns_listing_template', 20 );
-
-/**
- * Return Norwegian frontend labels for WP Store Locator strings that can bypass saved settings.
- *
- * @return array<string,string>
- */
-function mcp_wpsl_get_norwegian_labels(): array {
-	return array(
-		'Your location' => 'Sted/by',
-		'Search' => 'Søk',
-		'Searching...' => 'Søker...',
-		'Search radius' => 'Søkeradius',
-		'No results found' => 'Beklager, ingen butikk funnet!',
-		'Results' => 'resultater',
-		'More info' => 'Mer informasjon',
-		'Directions' => '',
-		'No route could be found between the origin and destination' => 'Ingen rute ble funnet mellom opprinnelses- og destinasjonsstedet',
-		'Back' => 'Tilbake',
-		'Street view' => 'Gatevisning',
-		'Zoom here' => 'Zoom her',
-		'Something went wrong, please try again!' => 'Noe gikk galt, vennligst prøv igjen!',
-		'API usage limit reached' => 'Grensen for API-bruk nådd',
-		'Phone' => 'Telefon',
-		'Fax' => 'Faks',
-		'Email' => 'E-post',
-		'Url' => 'url',
-		'Hours' => 'Timer',
-		'Start location' => 'Startsted',
-		'Category filter' => 'Kategorifilter',
-		'All' => 'Alle',
-	);
-}
-
-/**
- * Keep Store Locator frontend labels Norwegian when WPML String Translation bypasses WPSL settings.
- *
- * @param string $translation Translated string.
- * @param string $text        Original string.
- * @param string $domain      Text domain.
- */
-function mcp_wpsl_translate_norwegian_label( string $translation, string $text, string $domain ): string {
-	if ( ! in_array( $domain, array( 'wp-store-locator', 'wpsl' ), true ) ) {
-		return $translation;
-	}
-
-	$locale = determine_locale();
-	if ( ! in_array( $locale, array( 'nb_NO', 'nn_NO' ), true ) && ! str_starts_with( (string) $locale, 'no' ) ) {
-		return $translation;
-	}
-
-	$labels = mcp_wpsl_get_norwegian_labels();
-	return array_key_exists( $text, $labels ) ? $labels[ $text ] : $translation;
-}
-add_filter( 'gettext', 'mcp_wpsl_translate_norwegian_label', 20, 3 );
 
 /**
  * Let Elementor-rendered Store Locator store posts use their Elementor content.
@@ -1572,7 +1518,7 @@ function mcp_wpsl_register_abilities(): void {
 				'properties'           => array(
 					'mappings' => array(
 						'type'        => 'object',
-						'description' => 'Object keyed by frontend language code with source language code values, for example {"en":"no"}. Empty or same-language values remove mappings.',
+						'description' => 'Object keyed by frontend language code with source language code values, for example {"fr":"en"}. Empty or same-language values remove mappings.',
 					),
 					'dry_run'  => array( 'type' => 'boolean' ),
 				),

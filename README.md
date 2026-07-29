@@ -2,13 +2,13 @@
 
 Store Locator maintenance abilities for MCP.
 
-[![GitHub release](https://img.shields.io/github/v/release/bjornfix/mcp-abilities-store-locator)](https://github.com/bjornfix/mcp-abilities-store-locator/releases)
+[![Release 0.1.17](https://img.shields.io/badge/release-0.1.17-blue.svg)](https://downloads.devenia.com/mcp-abilities-store-locator.zip)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/gpl-2.0)
 [![WordPress](https://img.shields.io/badge/WordPress-6.9%2B-blue.svg)](https://wordpress.org)
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-purple.svg)](https://php.net)
 
 **Tested up to:** 7.0
-**Stable tag:** 0.1.16
+**Stable tag:** 0.1.17
 **License:** GPLv2 or later
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -112,7 +112,7 @@ If you are new to the stack, use this order:
 
 If you skip base-stack verification and start with add-ons immediately, troubleshooting gets harder than it needs to be.
 
-## Abilities (11)
+## Abilities (12)
 
 | Ability | Description |
 |---------|-------------|
@@ -120,6 +120,7 @@ If you skip base-stack verification and start with add-ons immediately, troubles
 | `wpsl/update-settings` | Update supported Store Locator settings with Store Locator-aware validation |
 | `wpsl/update-permalink-base-translations` | Configure translated Store Locator permalink bases |
 | `wpsl/update-label-translations` | Configure language-specific Store Locator frontend labels |
+| `wpsl/update-navigation-source-language-links` | Configure which source-language store links and labels appear in selected frontend languages |
 | `wpsl/set-template` | Set the active Store Locator search template by installed template ID |
 | `wpsl/list-stores` | List real Store Locator store posts with address/contact/location metadata |
 | `wpsl/get-store` | Read one real Store Locator store post and its locator metadata |
@@ -210,6 +211,10 @@ If you skip base-stack verification and start with add-ons immediately, troubles
 - The frontend template preserves the Store Locator shortcode, map, search form, AJAX result list, and cache behavior.
 
 ## Changelog
+
+### 0.1.17
+
+- Removed built-in language-specific label overrides; frontend labels remain configurable through the public translation ability.
 
 ### 0.1.11
 
