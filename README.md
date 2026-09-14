@@ -1,269 +1,215 @@
-# MCP Abilities - Store Locator
+# MCP Abilities – Store Locator
 
-Store Locator maintenance abilities for MCP.
+Keep a branch's address, map coordinates and contact details together in WP Store Locator. An AI assistant can find the existing store record, update supported fields and check the saved result without creating another directory inside a page builder.
 
-[![Release 0.1.17](https://img.shields.io/badge/release-0.1.17-blue.svg)](https://downloads.devenia.com/mcp-abilities-store-locator.zip)
-[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/gpl-2.0)
-[![WordPress](https://img.shields.io/badge/WordPress-6.9%2B-blue.svg)](https://wordpress.org)
-[![PHP](https://img.shields.io/badge/PHP-8.0%2B-purple.svg)](https://php.net)
+[![Release 0.1.18](https://img.shields.io/badge/release-0.1.18-blue.svg)](https://downloads.devenia.com/mcp-abilities-store-locator.zip)
+[![License: GPL v2 or later](https://img.shields.io/badge/License-GPL%20v2%2B-blue.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
+[![WordPress 6.9+](https://img.shields.io/badge/WordPress-6.9%2B-blue.svg)](https://wordpress.org/)
+[![PHP 8.0+](https://img.shields.io/badge/PHP-8.0%2B-purple.svg)](https://www.php.net/)
 
-**Tested up to:** 7.0
-**Stable tag:** 0.1.17
+**Tested up to:** WordPress 7.1
+**Stable tag:** 0.1.18
 **License:** GPLv2 or later
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html
-
 **Tags:** mcp, ai, automation, abilities-api, store-locator
 
 ## What It Does
 
-This plugin is part of the Devenia MCP abilities ecosystem. It gives an MCP-capable agent a focused, authenticated way to work with Store Locator data inside WordPress through MCP.
+The add-on exposes 12 authenticated WordPress abilities for WP Store Locator 2.x. They read stores and categories, create or update store records, inspect and change supported settings, select an installed template and clear the locator's autoload cache.
 
-It adds abilities for Store Locator settings, templates, store records, store categories, and transient cleanup. It can also register maintained locator templates that keep maps, search, AJAX results, labels, and store data under the Store Locator plugin instead of duplicating location entries into Elementor or static page content.
+It also registers the `dynamic_columns` template. WP Store Locator continues to own the shortcode, map, search, result data and category filtering. The template arranges the result list into three columns on larger screens, two on tablets and one on smaller screens.
 
-**Example:** "Put the location listings into columns." - The agent can inspect Store Locator settings, confirm available templates, activate the maintained template, clear Store Locator transients, and verify the rendered locator page.
+Optional multilingual settings cover custom store URL bases for WPML language-directory URLs, the columns template's search field/button labels, and source-language links for native store menu items. The latter uses existing WPML or Polylang translation relationships; it does not create translations.
 
 ## The Real Workflow
 
-In practice, the human should not have to memorize every ability name.
+A branch moves. Updating the written address alone can leave its marker at the old premises.
 
-The normal pattern is:
+1. Ask the assistant to find the branch and show its ID, address, coordinates and contact details.
+2. Confirm the record against the branch's current information.
+3. Supply the new address and verified latitude/longitude together. The add-on does not geocode an address.
+4. Update that record, then read it back.
+5. Open the public locator, search for the branch, inspect the marker and follow the contact or store link.
 
-1. install the base MCP stack
-2. install only the add-ons the site actually needs
-3. let the agent discover the available abilities
-4. give the agent a clear task with boundaries
-5. verify the result in WordPress
-
-The human's job is mostly to describe the goal.
-The agent's job is to figure out the mechanics.
+A stored coordinate is evidence of what was saved, not proof of where the entrance is. Check the real destination before relying on the locator.
 
 ## Why This Feels Different
 
-Most WordPress automation still leaves the repetitive part to the human.
+The assistant can carry out maintenance on the same records that the locator uses. A map result and a listing do not need separate hand-maintained copies.
 
-This plugin is different because the agent can act inside the site through a narrow, authenticated ability surface:
+Other useful tasks include:
 
-- inspect current locator settings before changing anything
-- list and read real locator store records
-- update supported store metadata without touching page-builder content
-- switch to a maintained Store Locator template instead of creating manual cards
-- clear locator cache after a real data or template change
-- keep native Store Locator menu items while rendering selected frontend languages with source-language store links and menu labels
-
-That changes the experience from:
-
-- `Here is what you should do in wp-admin`
-
-to:
-
-- `Tell the agent what needs doing, and let it carry out the work`
+- **Prepare a new branch:** search for an existing entry first, create a draft, add verified location/contact fields and assign existing categories before publication.
+- **Review a network of locations:** page through store records to find missing contact details or entries that need confirmation. The assistant must interpret those records; there is no automatic accuracy audit.
+- **Improve how visitors choose a location:** preview search radius/result-count settings, choose an installed template and check the public search on mobile.
+- **Review a multilingual locator:** adjust the two supported search labels or configured store links, then open each affected language to confirm the result.
 
 ## Before vs After
 
-### Before
-
-- open wp-admin
-- find the Store Locator settings
-- inspect store records one by one
-- copy location details into page-builder cards when layout demands change
-- remember to clear locator cache
-
-### After
-
-- tell the agent what Store Locator outcome you need
-- let it inspect the current locator state
-- let it run the targeted ability
-- verify the rendered page and move on
+| Task | Manual work | With the add-on |
+|---|---|---|
+| A branch moves | Find the record and edit several fields | Inspect the record, update the confirmed fields and read them back |
+| A new branch opens | Re-enter details in multiple page layouts | Create one native draft for the locator to use |
+| Results need columns | Maintain another list in page content | Select the registered `dynamic_columns` template |
+| Old search results remain | Locate the relevant cache controls | Request native WP Store Locator autoload invalidation |
 
 ## Who It Is For
 
-This is a good fit for:
+Retail groups, service networks and agencies maintaining sites that already use WP Store Locator. It suits work on branches, showrooms or collection points where the map and list should share one record.
 
-- agencies managing WordPress sites with Store Locator location data
-- operators who want agents to maintain locator settings and records safely
-- teams already using MCP Expose Abilities
-- sites where store/search output should stay dynamic and plugin-owned
+## Requirements
 
-It is especially useful when page-builder work would otherwise duplicate data that should remain canonical in Store Locator.
+- WordPress 6.9 or later with the Abilities API available.
+- PHP 8.0 or later. Use a maintained PHP release supported by the site.
+- An active WP Store Locator 2.x installation. Compatibility was checked with 2.3.23; this does not establish compatibility with WP Store Locator 3 preview releases.
+- An authenticated ability connection, such as [MCP Expose Abilities](https://devenia.com/plugins/mcp-expose-abilities/).
+- Native WP Store Locator permissions for the affected records or settings. Global multilingual mappings require `manage_options`.
+
+Configure the locator's map service in WP Store Locator. Its [Google Maps setup documentation](https://wpstorelocator.co/document/create-google-api-keys/) explains the required keys and provider setup for version 2. These abilities do not create map credentials, enable billing or validate provider charges.
 
 ## Documentation
 
-Start with the main plugin page and base stack documentation:
-
+- [Plugin page](https://devenia.com/plugins/mcp-abilities-store-locator/)
+- [WP Store Locator](https://wordpress.org/plugins/wp-store-locator/)
+- [WP Store Locator documentation](https://wpstorelocator.co/documentation/)
+- [Native template registration](https://wpstorelocator.co/document/wpsl_templates/)
 - [MCP Expose Abilities](https://devenia.com/plugins/mcp-expose-abilities/)
-- [Plugin Page](https://devenia.com/plugins/mcp-expose-abilities/#add-ons)
-- [Getting Started](https://github.com/bjornfix/mcp-expose-abilities/wiki/Getting-Started)
-- [Install Order and Dependencies](https://github.com/bjornfix/mcp-expose-abilities/wiki/Install-Order-and-Dependencies)
-
-If you are using an AI agent, the simplest instruction is often just:
-
-- `Read https://github.com/bjornfix/mcp-expose-abilities and figure out the stack before making changes.`
 
 ## Start Here
 
-If you are new to the stack, use this order:
-
-1. Install **Abilities API**.
-2. Install **MCP Adapter**.
-3. Install **MCP Expose Abilities**.
-4. Install **MCP Abilities - Store Locator**.
-5. Confirm the new abilities appear in discovery.
-6. Give the agent a clear Store Locator task.
-
-If you skip base-stack verification and start with add-ons immediately, troubleshooting gets harder than it needs to be.
+1. Confirm that the existing WP Store Locator map and search work.
+2. Install this add-on and connect an authenticated assistant.
+3. Ask for `wpsl/get-status` and a small `wpsl/list-stores` result.
+4. Give the assistant one concrete task, the target store ID and the information it may change.
+5. Inspect the saved record and the visitor-facing result.
 
 ## Abilities (12)
 
-| Ability | Description |
-|---------|-------------|
-| `wpsl/get-status` | Read Store Locator availability, settings, templates, and published store count |
-| `wpsl/update-settings` | Update supported Store Locator settings with Store Locator-aware validation |
-| `wpsl/update-permalink-base-translations` | Configure translated Store Locator permalink bases |
-| `wpsl/update-label-translations` | Configure language-specific Store Locator frontend labels |
-| `wpsl/update-navigation-source-language-links` | Configure which source-language store links and labels appear in selected frontend languages |
-| `wpsl/set-template` | Set the active Store Locator search template by installed template ID |
-| `wpsl/list-stores` | List real Store Locator store posts with address/contact/location metadata |
-| `wpsl/get-store` | Read one real Store Locator store post and its locator metadata |
-| `wpsl/create-store` | Create a Store Locator store post with supported locator metadata |
-| `wpsl/update-store` | Update a Store Locator store post, supported metadata, and categories |
-| `wpsl/list-categories` | List `wpsl_store_category` terms |
-| `wpsl/clear-transients` | Clear Store Locator autoload transients |
+| Ability | Purpose |
+|---|---|
+| `wpsl/get-status` | Availability, installed templates, published count, settings and multilingual configuration; map key values are omitted |
+| `wpsl/list-stores` | Paginated readable stores with location/contact fields; totals may be null for limited users |
+| `wpsl/get-store` | One readable store, its metadata and categories |
+| `wpsl/list-categories` | Existing native store categories |
+| `wpsl/create-store` | A native store, defaulting to draft, with supported metadata/categories |
+| `wpsl/update-store` | Supported fields on one editable store |
+| `wpsl/set-template` | Select an installed template, optionally with a dry run |
+| `wpsl/update-settings` | Update supported native settings, reporting invalid or unsupported keys in `skipped` |
+| `wpsl/update-permalink-base-translations` | Replace the configured WPML language-directory store-base map |
+| `wpsl/update-label-translations` | Replace `search_label` and `search_btn_label` overrides for the columns template |
+| `wpsl/update-navigation-source-language-links` | Replace the frontend-language to source-language map for native store menu links |
+| `wpsl/clear-transients` | Invoke WP Store Locator's native autoload cache invalidation |
 
 ## Usage Examples
 
-### Inspect Store Locator Status
+### Inspect a small set of stores
 
 ```json
 {
-  "ability_name": "wpsl/get-status",
-  "parameters": {}
+  "ability_name": "wpsl/list-stores",
+  "parameters": {"status": "publish", "per_page": 10, "page": 1, "order": "ASC", "orderby": "title"}
 }
 ```
 
-### Translate Frontend Labels Per Language
+### Change a confirmed contact destination
+
+Replace the example ID and URL with the verified store's values.
+
+```json
+{
+  "ability_name": "wpsl/update-store",
+  "parameters": {"id": 123, "meta": {"url": "https://example.com/branches/north/"}}
+}
+```
+
+Writable metadata: `address`, `address2`, `city`, `state`, `zip`, `country`, `country_iso`, `lat`, `lng`, `phone`, `fax`, `email` and `url`. Coordinates must be numeric and within geographic ranges. Existing opening hours can be read, but are not writable through this add-on.
+
+An explicit `categories` array replaces the store's categories. Use existing IDs or slugs; an empty array clears them. Unknown categories are rejected. Creation is not a duplicate check: search before creating another store.
+
+### Preview native search choices
+
+The brackets identify the default choice in WP Store Locator's dropdown format.
+
+```json
+{
+  "ability_name": "wpsl/update-settings",
+  "parameters": {
+    "settings": {"search_radius": "10,25,[50],100", "max_results": "[25],50,100"},
+    "dry_run": true
+  }
+}
+```
+
+Supported settings: `autoload`, `debug`, `hide_country`, `hide_distance`, `hide_hours`, `listing_below_no_scroll`, `permalinks`, `reset_map`, `show_contact_details`, `show_credits`, `store_url`, `height`, `autoload_limit`, `max_results`, `search_radius`, `zoom_level`, `auto_zoom_level`, `template_id`, `start_name`, `start_latlng`, `api_region` and `distance_unit`. The distance unit is `km` or `mi`. Credentials are managed in WP Store Locator, not through this settings ability.
+
+### Preview the columns template
+
+```json
+{
+  "ability_name": "wpsl/set-template",
+  "parameters": {"template_id": "dynamic_columns", "listing_below_no_scroll": true, "dry_run": true}
+}
+```
+
+### Set the columns template's French search labels
+
+The supplied translation map is a complete replacement. Include any other language overrides that should remain.
 
 ```json
 {
   "ability_name": "wpsl/update-label-translations",
   "parameters": {
-    "translations": {
-      "en": {
-        "search_label": "Location/city",
-        "search_btn_label": "Search"
-      }
-    }
+    "translations": {"fr": {"search_label": "Ville ou adresse", "search_btn_label": "Rechercher"}},
+    "dry_run": true
   }
 }
 ```
 
-### Activate The Maintained Column Template
+Other locator labels remain under WP Store Locator's native translation system. URL-base and menu-language mappings also replace their complete stored maps; inspect their current values with `wpsl/get-status` first.
 
-```json
-{
-  "ability_name": "wpsl/set-template",
-  "parameters": {
-    "template_id": "your_template_id",
-    "listing_below_no_scroll": true
-  }
-}
-```
+## Safety and Ownership
 
-### List Store Records
+- Store read/write actions respect the native store post type and object permissions. Publishing requires the store publishing capability; category assignment respects the native taxonomy capability.
+- Input validation runs before store writes. A storage failure can still leave a partially saved record; the response reports failure and returns the current store for inspection.
+- Settings responses report whether map keys are configured without returning the keys.
+- Store data stays in native posts, metadata and taxonomy terms. These tools do not delete stores, import CSV files, write opening hours or automatically translate/geocode content.
+- Custom URL bases apply to matching WPML language-directory links. Plain, draft, query-language and different-domain links retain native handling.
+- Menu link/title changes use WordPress's native menu filters. Existing translations remain owned by WPML or Polylang.
+- Cache invalidation uses the native WP Store Locator method. The legacy `deleted` field indicates whether that method ran, not how many cache entries were removed.
 
-```json
-{
-  "ability_name": "wpsl/list-stores",
-  "parameters": {
-    "status": "publish",
-    "per_page": 50,
-    "orderby": "title",
-    "order": "ASC"
-  }
-}
-```
+## Installation
 
-### Update Store Metadata
-
-```json
-{
-  "ability_name": "wpsl/update-store",
-  "parameters": {
-    "id": 123,
-    "meta": {
-      "address": "Example Street 1",
-      "city": "Example City",
-      "zip": "00000",
-      "country": "Example Country",
-      "lat": "0",
-      "lng": "0",
-      "phone": "+47 00 00 00 00",
-      "email": "post@example.com"
-    }
-  }
-}
-```
-
-## Notes
-
-- The plugin intentionally keeps store content in Store Locator posts and metadata.
-- It does not create Elementor cards, static location listings, or duplicate store records into page content.
-- Maintained Store Locator templates are registered through the locator template filter.
-- The frontend template preserves the Store Locator shortcode, map, search form, AJAX result list, and cache behavior.
+Download the [plugin ZIP](https://downloads.devenia.com/mcp-abilities-store-locator.zip), upload it in **Plugins → Add New → Upload Plugin**, and activate it alongside WP Store Locator. Confirm discovery through the authenticated connection.
 
 ## Changelog
 
+### 0.1.18
+
+- Enforced native store/object permissions and preserved literal content and metadata.
+- Rejected invalid coordinates and unknown categories before saving; reported storage failures accurately.
+- Preserved native search dropdown lists and corrected supported setting names.
+- Removed map credentials from settings responses and loaded native cache invalidation for API requests.
+- Corrected multilingual lookups, retained native menu/rewrite handling and limited custom labels to the two supported search labels.
+- Escaped the maintained template's search input value.
+
 ### 0.1.17
 
-- Removed built-in language-specific label overrides; frontend labels remain configurable through the public translation ability.
+- Removed built-in language-specific label overrides in favour of configured template labels.
 
-### 0.1.11
+## Contributing
 
-- Added configurable language-specific frontend label translations for the maintained Store Locator template.
+Describe the affected ability or template, the WP Store Locator version and the expected visitor-facing result. Include a small reproducible example without credentials or real customer data.
 
-### 0.1.10
+## License
 
-- Renamed the maintained columns template, frontend classes, and internal identifiers to generic public-plugin names.
+GPLv2 or later. See the [GNU licence](https://www.gnu.org/licenses/gpl-2.0.html).
 
-### 0.1.9
+## Author
 
-- Replaced site-specific store URL handling with configurable translated WPSL store permalink bases.
-- Added an ability for updating translated store permalink base mappings.
+[basicus](https://profiles.wordpress.org/basicus/)
 
-### 0.1.8
+## Links
 
-- Added a request router for configured translated store URL bases when WPML/WPSL rewrite matching misses the custom base.
-
-### 0.1.7
-
-- Fixed translated store permalink generation and routing for custom translated bases.
-
-### 0.1.6
-
-- Added translated permalink base support for WP Store Locator store translations.
-
-### 0.1.5
-
-- Removed the default bottom margin from Store Locator map canvases rendered inside Elementor Shortcode widgets.
-
-### 0.1.4
-
-- Tightened the mobile top gap above the Store Locator search label.
-
-### 0.1.3
-
-- Suppressed the final divider line after the last location entry.
-
-### 0.1.2
-
-- Adjusted the maintained columns template so location entries use only a bottom divider instead of boxed card borders.
-
-### 0.1.1
-
-- Improved the maintained columns template so card padding is not overridden by Store Locator base styles.
-- Read the search label and button text directly from Store Locator settings in the maintained template.
-- Added maintained label and Elementor store-post compatibility handling.
-
-### 0.1.0
-
-- Added Store Locator settings, template, store, category, and transient abilities.
-- Added a maintained Store Locator template for dynamic location columns.
+- [Product page](https://devenia.com/plugins/mcp-abilities-store-locator/)
+- [Download](https://downloads.devenia.com/mcp-abilities-store-locator.zip)
+- [WP Store Locator](https://wordpress.org/plugins/wp-store-locator/)

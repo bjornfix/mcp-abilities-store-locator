@@ -1,9 +1,9 @@
 <?php
 /**
  * Plugin Name: MCP Abilities - Store Locator
- * Plugin URI: https://devenia.com
+ * Plugin URI: https://devenia.com/plugins/mcp-abilities-store-locator/
  * Description: Narrow MCP abilities and maintained frontend template support for WP Store Locator.
- * Version: 0.1.17
+ * Version: 0.1.18
  * Author: basicus
  * Author URI: https://profiles.wordpress.org/basicus/
  * License: GPL-2.0+
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 const MCP_WPSL_COLUMNS_TEMPLATE = 'dynamic_columns';
-const MCP_WPSL_VERSION             = '0.1.17';
+const MCP_WPSL_VERSION             = '0.1.18';
 const MCP_WPSL_BASE_TRANSLATIONS   = 'mcp_wpsl_permalink_base_translations';
 const MCP_WPSL_LABEL_TRANSLATIONS  = 'mcp_wpsl_label_translations';
 const MCP_WPSL_NAV_SOURCE_LINKS    = 'mcp_wpsl_nav_source_language_links';
@@ -103,13 +103,6 @@ function mcp_wpsl_get_translated_store_base( string $language_code ): string {
  * Return the active frontend language code from WPML, Polylang, or locale.
  */
 function mcp_wpsl_current_language_code(): string {
-	$request_path = mcp_wpsl_get_request_path();
-	if ( preg_match( '#^/([a-z]{2}(?:-[a-z0-9]+)?)(?:/|$)#i', $request_path, $matches ) ) {
-		$request_language = sanitize_key( (string) $matches[1] );
-		if ( in_array( $request_language, mcp_wpsl_get_configured_language_codes(), true ) ) {
-			return $request_language;
-		}
-	}
 
 	$wpml_language = call_user_func_array( 'apply_filters', array( 'wpml_current_language', null ) );
 	if ( is_string( $wpml_language ) && '' !== $wpml_language ) {
@@ -123,9 +116,17 @@ function mcp_wpsl_current_language_code(): string {
 		}
 	}
 
+	$request_path = mcp_wpsl_get_request_path();
+	if ( preg_match( '#^/([a-z]{2,3}(?:-[a-z0-9]+)?)(?:/|$)#i', $request_path, $matches ) ) {
+		$request_language = sanitize_key( (string) $matches[1] );
+		if ( in_array( $request_language, mcp_wpsl_get_configured_language_codes(), true ) ) {
+			return $request_language;
+		}
+	}
+
 	$locale = determine_locale();
 	if ( is_string( $locale ) && '' !== $locale ) {
-		return sanitize_key( substr( $locale, 0, 2 ) );
+		return sanitize_key( explode( '_', str_replace( '-', '_', $locale ) )[0] );
 	}
 
 	return '';
@@ -137,30 +138,7 @@ function mcp_wpsl_current_language_code(): string {
  * @return array<int,string>
  */
 function mcp_wpsl_supported_label_keys(): array {
-	return array(
-		'search_label',
-		'search_btn_label',
-		'preloader_label',
-		'radius_label',
-		'no_results_label',
-		'results_label',
-		'more_label',
-		'directions_label',
-		'no_directions_label',
-		'back_label',
-		'street_view_label',
-		'zoom_here_label',
-		'error_label',
-		'phone_label',
-		'fax_label',
-		'email_label',
-		'url_label',
-		'hours_label',
-		'start_label',
-		'limit_label',
-		'category_label',
-		'category_default_label',
-	);
+	return array( 'search_label', 'search_btn_label' );
 }
 
 /**
@@ -281,7 +259,7 @@ function mcp_wpsl_get_post_language_code( int $post_id, string $post_type ): str
 			null,
 			array(
 				'element_id'   => $post_id,
-				'element_type' => 'post_' . $post_type,
+				'element_type' => $post_type,
 			),
 		)
 	);
@@ -309,7 +287,7 @@ function mcp_wpsl_get_store_post_in_language( int $post_id, string $language_cod
 		return 0;
 	}
 
-	$wpml_post_id = call_user_func_array( 'apply_filters', array( 'wpml_object_id', $post_id, 'wpsl_stores', false, $language_code ) );
+	$wpml_post_id = false !== has_filter( 'wpml_object_id' ) ? call_user_func_array( 'apply_filters', array( 'wpml_object_id', $post_id, 'wpsl_stores', false, $language_code ) ) : null;
 	if ( is_numeric( $wpml_post_id ) && (int) $wpml_post_id > 0 ) {
 		return (int) $wpml_post_id;
 	}
@@ -446,6 +424,9 @@ function mcp_wpsl_get_nav_store_source_render_data( object $item ): array {
  * Register configured language-specific WPSL store rewrite bases.
  */
 function mcp_wpsl_register_translated_store_rewrites(): void {
+	if ( ! post_type_exists( 'wpsl_stores' ) ) {
+		return;
+	}
 	foreach ( mcp_wpsl_get_permalink_base_translations() as $language_code => $base ) {
 		add_rewrite_rule(
 			'^' . preg_quote( $language_code, '#' ) . '/' . preg_quote( $base, '#' ) . '/([^/]+)/?$',
@@ -454,45 +435,17 @@ function mcp_wpsl_register_translated_store_rewrites(): void {
 		);
 	}
 }
-add_action( 'init', 'mcp_wpsl_register_translated_store_rewrites', 8 );
+add_action( 'init', 'mcp_wpsl_register_translated_store_rewrites', 11 );
 
 /**
  * Return the current request path with basic sanitization.
  */
 function mcp_wpsl_get_request_path(): string {
 	$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REQUEST_URI'] ) ) : '';
-	return (string) strtok( $request_uri, '?' );
+	$path = (string) strtok( $request_uri, '?' );
+	$home_path = rtrim( (string) wp_parse_url( (string) get_option( 'home' ), PHP_URL_PATH ), '/' );
+	return $home_path && str_starts_with( $path, $home_path . '/' ) ? substr( $path, strlen( $home_path ) ) : $path;
 }
-
-/**
- * Route translated store bases to WPSL store posts when WPML/WPSL rewrite rules miss them.
- *
- * @param array<string,mixed> $query_vars Parsed request query vars.
- * @return array<string,mixed>
- */
-function mcp_wpsl_route_translated_store_request( array $query_vars ): array {
-	$request_path = mcp_wpsl_get_request_path();
-	foreach ( mcp_wpsl_get_permalink_base_translations() as $language_code => $base ) {
-		if ( ! preg_match( '#^/' . preg_quote( $language_code, '#' ) . '/' . preg_quote( $base, '#' ) . '/([^/]+)/?$#', $request_path, $matches ) ) {
-			continue;
-		}
-
-		$slug = sanitize_title( (string) $matches[1] );
-		if ( '' === $slug ) {
-			return $query_vars;
-		}
-
-		$query_vars['post_type']   = 'wpsl_stores';
-		$query_vars['name']        = $slug;
-		$query_vars['wpsl_stores'] = $slug;
-		$query_vars['lang']        = $language_code;
-
-		return $query_vars;
-	}
-
-	return $query_vars;
-}
-add_filter( 'request', 'mcp_wpsl_route_translated_store_request', 1 );
 
 /**
  * Flush rewrite rules once after a plugin version with rewrite changes is deployed.
@@ -525,7 +478,17 @@ function mcp_wpsl_filter_translated_store_permalink( string $post_link, WP_Post 
 		return $post_link;
 	}
 
-	return trailingslashit( (string) get_option( 'home' ) ) . user_trailingslashit( $language_code . '/' . $base . '/' . $post->post_name );
+	if ( in_array( $post->post_status, array( 'auto-draft', 'draft', 'pending' ), true ) || ! get_option( 'permalink_structure' ) ) {
+		return $post_link;
+	}
+	$settings = mcp_wpsl_get_settings();
+	$source_base = sanitize_title( (string) ( $settings['permalink_slug'] ?? '' ) );
+	$home = trailingslashit( (string) get_option( 'home' ) );
+	$prefix = $home . $language_code . '/' . $source_base . '/';
+	if ( '' === $source_base || ! str_starts_with( $post_link, $prefix ) ) {
+		return $post_link;
+	}
+	return $home . $language_code . '/' . $base . '/' . substr( $post_link, strlen( $prefix ) );
 }
 add_filter( 'post_type_link', 'mcp_wpsl_filter_translated_store_permalink', 20, 2 );
 
@@ -560,7 +523,7 @@ function mcp_wpsl_redirect_translated_store_canonical_base(): void {
 	}
 
 	$canonical = get_permalink( $post_id );
-	if ( $canonical ) {
+	if ( $canonical && wp_parse_url( $canonical, PHP_URL_PATH ) !== wp_parse_url( (string) get_option( 'home' ) . $request_path, PHP_URL_PATH ) ) {
 		wp_safe_redirect( $canonical, 301 );
 		exit;
 	}
@@ -627,37 +590,6 @@ function mcp_wpsl_filter_nav_store_source_title( string $title, object $item ): 
 add_filter( 'nav_menu_item_title', 'mcp_wpsl_filter_nav_store_source_title', 1000, 2 );
 
 /**
- * Override final native walker output for menu renderers that rewrite item links after earlier filters.
- */
-function mcp_wpsl_filter_nav_store_source_start_element( string $item_output, object $item ): string {
-	$source_data = mcp_wpsl_get_nav_store_source_render_data( $item );
-	if ( '' === $source_data['url'] && '' === $source_data['title'] ) {
-		return $item_output;
-	}
-
-	if ( '' !== $source_data['url'] ) {
-		$item_output = preg_replace(
-			'/href=([\'"])[^\'"]*\\1/',
-			'href="' . esc_url( $source_data['url'] ) . '"',
-			$item_output,
-			1
-		) ?? $item_output;
-	}
-
-	if ( '' !== $source_data['title'] ) {
-		$item_output = preg_replace(
-			'#(<a\b[^>]*>).*?(</a>)#s',
-			'$1' . esc_html( $source_data['title'] ) . '$2',
-			$item_output,
-			1
-		) ?? $item_output;
-	}
-
-	return $item_output;
-}
-add_filter( 'walker_nav_menu_start_el', 'mcp_wpsl_filter_nav_store_source_start_element', 1000, 2 );
-
-/**
  * Register the maintained columns store-locator template with WP Store Locator.
  *
  * @param array<int,array<string,string>> $templates Existing WPSL templates.
@@ -696,7 +628,7 @@ function mcp_wpsl_enqueue_columns_template_style(): void {
 	$css .= "#wpsl-wrap.mcp-wpsl-columns #wpsl-result-list li{box-sizing:border-box;width:auto;padding:0;border-bottom:0;}\n";
 	$css .= "#wpsl-wrap.mcp-wpsl-columns #wpsl-result-list li.mcp-wpsl-card{height:100%;padding:0 0 20px;border:0;border-bottom:1px solid #e5e5e5;background:#fff;}\n";
 	$css .= "#wpsl-wrap.mcp-wpsl-columns #wpsl-result-list li.mcp-wpsl-card:last-child{border-bottom:0;}\n";
-	$css .= ".elementor-widget-shortcode .wpsl-gmap-canvas{margin-bottom:0;}\n";
+	$css .= "#wpsl-wrap.mcp-wpsl-columns .wpsl-gmap-canvas{margin-bottom:0;}\n";
 	$css .= "@media (max-width:1024px){#wpsl-wrap.mcp-wpsl-columns #wpsl-stores>ul{grid-template-columns:repeat(2,minmax(0,1fr));}}\n";
 	$css .= "@media (max-width:767px){#wpsl-wrap.mcp-wpsl-columns .wpsl-search{padding-top:14px;}#wpsl-wrap.mcp-wpsl-columns #wpsl-stores>ul{grid-template-columns:1fr;gap:20px;}}\n";
 
@@ -753,7 +685,7 @@ function mcp_wpsl_check_dependencies(): bool {
 		add_action(
 			'admin_notices',
 			static function (): void {
-				echo '<div class="notice notice-error"><p><strong>MCP Abilities - Store Locator</strong> requires the Abilities API plugin to be installed and activated.</p></div>';
+				echo '<div class="notice notice-error"><p><strong>MCP Abilities - Store Locator</strong> requires WordPress 6.9 or later with the Abilities API available.</p></div>';
 			}
 		);
 		return false;
@@ -779,10 +711,11 @@ function mcp_wpsl_list_templates(): array {
 			continue;
 		}
 
+		$path = (string) ( $template['path'] ?? '' ) . (string) ( $template['file_name'] ?? '' );
 		$normalized[] = array(
 			'id'     => isset( $template['id'] ) ? (string) $template['id'] : '',
 			'name'   => isset( $template['name'] ) ? wp_strip_all_tags( (string) $template['name'] ) : '',
-			'exists' => isset( $template['path'] ) && file_exists( (string) $template['path'] ) ? 'yes' : 'no',
+			'exists' => is_file( $path ) ? 'yes' : 'no',
 		);
 	}
 
@@ -900,45 +833,118 @@ function mcp_wpsl_store_response( WP_Post $post ): array {
 }
 
 /**
- * Apply supported WPSL store meta fields.
+ * Save one native store after checking its permissions and all supplied fields.
  *
- * @param int   $post_id Store post ID.
- * @param array $meta Input meta keyed without wpsl_ prefix.
+ * @param array $input Ability input.
+ * @param int   $post_id Existing store ID, or zero to create a draft.
+ * @return array
  */
-function mcp_wpsl_update_store_meta( int $post_id, array $meta ): void {
-	foreach ( mcp_wpsl_store_meta_fields() as $field => $_type ) {
-		if ( ! array_key_exists( $field, $meta ) ) {
-			continue;
-		}
-
-		update_post_meta( $post_id, 'wpsl_' . $field, mcp_wpsl_sanitize_store_meta_value( $field, $meta[ $field ] ) );
+function mcp_wpsl_save_store( array $input, int $post_id = 0 ): array {
+	$type = get_post_type_object( 'wpsl_stores' );
+	$post = $post_id ? get_post( $post_id ) : null;
+	if ( ! $type || ( $post_id && ( ! $post || 'wpsl_stores' !== $post->post_type ) ) ) {
+		return array( 'success' => false, 'message' => 'WP Store Locator or the requested store is unavailable.' );
 	}
-}
-
-/**
- * Apply WPSL store categories by IDs and/or slugs.
- *
- * @param int   $post_id Store post ID.
- * @param array $input Category input.
- */
-function mcp_wpsl_update_store_categories( int $post_id, array $input ): void {
-	$term_ids = array();
-
-	foreach ( $input as $item ) {
-		if ( is_numeric( $item ) ) {
-			$term_ids[] = (int) $item;
+	if ( $post_id ? ! current_user_can( 'edit_post', $post_id ) : ! current_user_can( $type->cap->create_posts ) ) {
+		return array( 'success' => false, 'message' => 'You cannot edit this store or create a store.' );
+	}
+	$updates = $post_id ? array( 'ID' => $post_id ) : array( 'post_type' => 'wpsl_stores', 'post_status' => 'draft' );
+	if ( array_key_exists( 'status', $input ) ) {
+		$status = sanitize_key( (string) $input['status'] );
+		if ( ! in_array( $status, array( 'draft', 'pending', 'private', 'publish' ), true ) ) {
+			return array( 'success' => false, 'message' => 'Use draft, pending, private or publish status.' );
+		}
+		if ( in_array( $status, array( 'private', 'publish' ), true ) && ! current_user_can( $type->cap->publish_posts ) ) {
+			return array( 'success' => false, 'message' => 'You cannot publish stores.' );
+		}
+		$updates['post_status'] = $status;
+	}
+	foreach ( array( 'title', 'content', 'excerpt', 'slug' ) as $field ) {
+		if ( ! array_key_exists( $field, $input ) ) {
 			continue;
 		}
-
-		if ( is_string( $item ) && '' !== $item ) {
-			$term = get_term_by( 'slug', sanitize_title( $item ), 'wpsl_store_category' );
-			if ( $term ) {
-				$term_ids[] = (int) $term->term_id;
+		$value = (string) $input[ $field ];
+		switch ( $field ) {
+			case 'title':
+				$updates['post_title'] = sanitize_text_field( $value );
+				break;
+			case 'content':
+				$updates['post_content'] = wp_kses_post( $value );
+				break;
+			case 'excerpt':
+				$updates['post_excerpt'] = sanitize_textarea_field( $value );
+				break;
+			case 'slug':
+				$updates['post_name'] = sanitize_title( $value );
+				break;
+		}
+	}
+	if ( ( ! $post_id || isset( $input['title'] ) ) && '' === trim( $updates['post_title'] ?? '' ) ) {
+		return array( 'success' => false, 'message' => 'A non-empty store title is required.' );
+	}
+	$meta = array();
+	foreach ( $input['meta'] ?? array() as $field => $value ) {
+		if ( ! array_key_exists( $field, mcp_wpsl_store_meta_fields() ) || ! is_scalar( $value ) ) {
+			return array( 'success' => false, 'message' => 'Unsupported store metadata field or value: ' . sanitize_key( (string) $field ) );
+		}
+		if ( in_array( $field, array( 'lat', 'lng' ), true ) && '' !== (string) $value ) {
+			$limit = 'lat' === $field ? 90 : 180;
+			if ( ! is_numeric( $value ) || ! is_finite( (float) $value ) || abs( (float) $value ) > $limit ) {
+				return array( 'success' => false, 'message' => 'Invalid coordinate: ' . $field );
 			}
 		}
+		if ( $post_id && ! current_user_can( 'edit_post_meta', $post_id, 'wpsl_' . $field ) ) {
+			return array( 'success' => false, 'message' => 'You cannot edit the supplied store metadata.' );
+		}
+		$meta[ $field ] = mcp_wpsl_sanitize_store_meta_value( $field, $value );
+		if ( in_array( $field, array( 'email', 'url' ), true ) && '' !== (string) $value && '' === $meta[ $field ] ) {
+			return array( 'success' => false, 'message' => 'Invalid contact field: ' . $field );
+		}
 	}
-
-	wp_set_object_terms( $post_id, array_values( array_unique( $term_ids ) ), 'wpsl_store_category', false );
+	$term_ids = array();
+	if ( array_key_exists( 'categories', $input ) ) {
+		$taxonomy = get_taxonomy( 'wpsl_store_category' );
+		if ( ! $taxonomy || ! current_user_can( $taxonomy->cap->assign_terms ) ) {
+			return array( 'success' => false, 'message' => 'You cannot assign store categories.' );
+		}
+		foreach ( $input['categories'] as $item ) {
+			$term = is_numeric( $item ) ? get_term( (int) $item, 'wpsl_store_category' ) : ( is_string( $item ) ? get_term_by( 'slug', sanitize_title( $item ), 'wpsl_store_category' ) : false );
+			if ( ! $term || is_wp_error( $term ) ) {
+				return array( 'success' => false, 'message' => 'A supplied store category does not exist.' );
+			}
+			$term_ids[] = (int) $term->term_id;
+		}
+	}
+	$result = $post_id ? wp_update_post( wp_slash( $updates ), true ) : wp_insert_post( wp_slash( $updates ), true );
+	if ( is_wp_error( $result ) || ! $result ) {
+		return array( 'success' => false, 'message' => is_wp_error( $result ) ? $result->get_error_message() : 'Store could not be saved.' );
+	}
+	$post_id = (int) $result;
+	$error   = '';
+	foreach ( $meta as $field => $value ) {
+		if ( ! current_user_can( 'edit_post_meta', $post_id, 'wpsl_' . $field ) ) {
+			$error = 'Store saved, but metadata permission was denied.';
+			break;
+		}
+		update_post_meta( $post_id, 'wpsl_' . $field, wp_slash( $value ) );
+		if ( (string) get_post_meta( $post_id, 'wpsl_' . $field, true ) !== $value ) {
+			$error = 'Store saved, but metadata was not saved: ' . $field;
+			break;
+		}
+	}
+	if ( '' === $error && array_key_exists( 'categories', $input ) ) {
+		$result = wp_set_object_terms( $post_id, array_values( array_unique( $term_ids ) ), 'wpsl_store_category', false );
+		if ( is_wp_error( $result ) ) {
+			$error = 'Store saved, but categories were not saved: ' . $result->get_error_message();
+		}
+	}
+	$cleared = mcp_wpsl_clear_transients();
+	return array(
+		'success' => '' === $error,
+		'store' => mcp_wpsl_store_response( get_post( $post_id ) ),
+		'cache_cleared' => $cleared > 0,
+		'message' => $error ? $error : ( $cleared ? 'Store saved and locator cache cleared.' : 'Store saved. Native locator cache cleanup is unavailable.' ),
+	);
 }
 
 /**
@@ -946,6 +952,13 @@ function mcp_wpsl_update_store_categories( int $post_id, array $input ): void {
  */
 function mcp_wpsl_clear_transients(): int {
 	global $wpsl_admin;
+
+	if ( ! is_object( $wpsl_admin ) && defined( 'WPSL_PLUGIN_DIR' ) && is_readable( WPSL_PLUGIN_DIR . 'admin/class-admin.php' ) ) {
+		require_once WPSL_PLUGIN_DIR . 'admin/class-admin.php';
+		if ( ! is_object( $wpsl_admin ) && class_exists( 'WPSL_Admin' ) ) {
+			$wpsl_admin = new WPSL_Admin();
+		}
+	}
 
 	if ( is_object( $wpsl_admin ) && method_exists( $wpsl_admin, 'delete_autoload_transient' ) ) {
 		$wpsl_admin->delete_autoload_transient();
@@ -956,53 +969,73 @@ function mcp_wpsl_clear_transients(): int {
 }
 
 /**
- * Sanitize a supported WPSL setting by key.
+ * Sanitize the supported native WPSL settings, preserving dropdown lists.
  *
  * @param string $key Setting key.
  * @param mixed  $value Setting value.
- * @return mixed
+ * @return mixed Null means unsupported or invalid.
  */
 function mcp_wpsl_sanitize_setting_value( string $key, $value ) {
-	$boolean_keys = array(
-		'autoload',
-		'debug',
-		'hide_country',
-		'hide_distance',
-		'hide_hours',
-		'listing_below_no_scroll',
-		'permalinks',
-		'reset_map',
-		'show_contact_details',
-		'show_credits',
-		'store_url',
-	);
-
-	$integer_keys = array(
-		'height',
-		'max_autoload_results',
-		'max_results',
-		'search_radius',
-		'zoom_level',
-		'auto_zoom_level',
-	);
-
-	if ( in_array( $key, $boolean_keys, true ) ) {
-		return ! empty( $value ) ? 1 : 0;
+	if ( ! is_scalar( $value ) ) {
+		return null;
 	}
-
-	if ( in_array( $key, $integer_keys, true ) ) {
-		return absint( $value );
+	$booleans = array( 'autoload', 'debug', 'hide_country', 'hide_distance', 'hide_hours', 'listing_below_no_scroll', 'permalinks', 'reset_map', 'show_contact_details', 'show_credits', 'store_url' );
+	if ( in_array( $key, $booleans, true ) ) {
+		$boolean = filter_var( $value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE );
+		return null === $boolean ? null : (int) $boolean;
 	}
-
+	if ( in_array( $key, array( 'max_results', 'search_radius' ), true ) ) {
+		$list = preg_replace( '/\s+/', '', (string) $value );
+		$number = 'max_results' === $key ? '[1-9][0-9]*' : '[0-9]+(?:\.[0-9]+)?';
+		$item = '(?:' . $number . '|\[' . $number . '\])';
+		if ( ! preg_match( '/^' . $item . '(?:,' . $item . ')*$/', $list ) || substr_count( $list, '[' ) > 1 ) {
+			return null;
+		}
+		foreach ( explode( ',', $list ) as $entry ) {
+			if ( (float) trim( $entry, '[]' ) <= 0 ) {
+				return null;
+			}
+		}
+		return $list;
+	}
+	if ( in_array( $key, array( 'height', 'autoload_limit' ), true ) ) {
+		return is_numeric( $value ) && (int) $value > 0 ? (int) $value : null;
+	}
+	if ( 'zoom_level' === $key ) {
+		return function_exists( 'wpsl_valid_zoom_level' ) ? wpsl_valid_zoom_level( $value ) : null;
+	}
+	if ( 'auto_zoom_level' === $key ) {
+		return function_exists( 'wpsl_get_max_zoom_levels' ) && in_array( (int) $value, wpsl_get_max_zoom_levels(), true ) ? (int) $value : null;
+	}
+	if ( 'distance_unit' === $key ) {
+		return in_array( $value, array( 'km', 'mi' ), true ) ? $value : null;
+	}
+	if ( 'start_latlng' === $key ) {
+		if ( '' === trim( (string) $value ) ) {
+			return '';
+		}
+		$parts = array_map( 'trim', explode( ',', (string) $value ) );
+		if ( 2 !== count( $parts ) || ! is_numeric( $parts[0] ) || ! is_numeric( $parts[1] ) || abs( (float) $parts[0] ) > 90 || abs( (float) $parts[1] ) > 180 ) {
+			return null;
+		}
+		return implode( ',', $parts );
+	}
 	if ( 'template_id' === $key ) {
 		return sanitize_key( (string) $value );
 	}
-
-	if ( 'start_name' === $key || 'latlng' === $key || 'map_region' === $key || 'distance_unit' === $key ) {
+	if ( in_array( $key, array( 'start_name', 'api_region' ), true ) ) {
 		return sanitize_text_field( (string) $value );
 	}
-
 	return null;
+}
+
+/** Report whether map credentials exist without returning their values. */
+function mcp_wpsl_public_settings( array $settings ): array {
+	foreach ( array( 'api_browser_key', 'api_server_key' ) as $key ) {
+		$settings[ $key . '_configured' ] = ! empty( $settings[ $key ] );
+		unset( $settings[ $key ] );
+	}
+	return $settings;
 }
 
 /**
@@ -1045,14 +1078,14 @@ function mcp_wpsl_register_abilities(): void {
 					'active_template'  => isset( $settings['template_id'] ) ? (string) $settings['template_id'] : '',
 					'templates'        => mcp_wpsl_list_templates(),
 					'published_stores' => mcp_wpsl_count_published_stores(),
-					'settings'         => $settings,
-					'permalink_base_translations' => mcp_wpsl_get_permalink_base_translations(),
-					'label_translations' => mcp_wpsl_get_label_translations(),
-					'navigation_source_language_links' => mcp_wpsl_get_nav_source_language_links(),
+					'settings'         => mcp_wpsl_public_settings( $settings ),
+					'permalink_base_translations' => (object) mcp_wpsl_get_permalink_base_translations(),
+					'label_translations' => (object) mcp_wpsl_get_label_translations(),
+					'navigation_source_language_links' => (object) mcp_wpsl_get_nav_source_language_links(),
 				);
 			},
 			'permission_callback' => static function (): bool {
-				return current_user_can( 'manage_options' );
+				return current_user_can( 'manage_wpsl_settings' );
 			},
 			'meta'                => array(
 				'annotations' => array(
@@ -1086,8 +1119,9 @@ function mcp_wpsl_register_abilities(): void {
 				'type'       => 'object',
 				'properties' => array(
 					'stores' => array( 'type' => 'array' ),
-					'total'  => array( 'type' => 'integer' ),
-					'pages'  => array( 'type' => 'integer' ),
+					'total'  => array( 'type' => array( 'integer', 'null' ) ),
+					'pages'  => array( 'type' => array( 'integer', 'null' ) ),
+					'has_more' => array( 'type' => 'boolean' ),
 				),
 			),
 			'execute_callback'    => static function ( $input = array() ): array {
@@ -1102,22 +1136,27 @@ function mcp_wpsl_register_abilities(): void {
 					array(
 						'post_type'      => 'wpsl_stores',
 						'post_status'    => $status,
+						'perm'           => 'readable',
 						'posts_per_page' => $per_page,
 						'paged'          => $page,
-						'orderby'        => in_array( $orderby, array( 'title', 'date', 'modified', 'menu_order', 'ID' ), true ) ? $orderby : 'title',
+						'orderby'        => in_array( $orderby, array( 'title', 'date', 'modified', 'menu_order', 'id' ), true ) ? ( 'id' === $orderby ? 'ID' : $orderby ) : 'title',
 						'order'          => $order,
 						's'              => isset( $input['search'] ) ? sanitize_text_field( (string) $input['search'] ) : '',
 					)
 				);
 
+				$type = get_post_type_object( 'wpsl_stores' );
+				$can_count = $type && current_user_can( $type->cap->edit_others_posts ) && current_user_can( $type->cap->read_private_posts );
 				return array(
-					'stores' => array_map( 'mcp_wpsl_store_response', $query->posts ),
-					'total'  => (int) $query->found_posts,
-					'pages'  => (int) $query->max_num_pages,
+					'stores' => array_values( array_map( 'mcp_wpsl_store_response', array_filter( $query->posts, static function ( $post ): bool { return current_user_can( 'read_post', $post->ID ); } ) ) ),
+					'total'  => $can_count ? (int) $query->found_posts : null,
+					'pages'  => $can_count ? (int) $query->max_num_pages : null,
+					'has_more' => count( $query->posts ) === $per_page,
 				);
 			},
 			'permission_callback' => static function (): bool {
-				return current_user_can( 'edit_posts' );
+				$type = get_post_type_object( 'wpsl_stores' );
+				return $type && current_user_can( $type->cap->edit_posts );
 			},
 			'meta'                => array(
 				'annotations' => array(
@@ -1153,10 +1192,15 @@ function mcp_wpsl_register_abilities(): void {
 					return array( 'success' => false, 'message' => 'WPSL store not found.' );
 				}
 
+				if ( ! current_user_can( 'read_post', $id ) ) {
+					return array( 'success' => false, 'message' => 'You cannot read this store.' );
+				}
+
 				return array( 'success' => true, 'store' => mcp_wpsl_store_response( $post ) );
 			},
 			'permission_callback' => static function (): bool {
-				return current_user_can( 'edit_posts' );
+				$type = get_post_type_object( 'wpsl_stores' );
+				return $type && current_user_can( $type->cap->edit_posts );
 			},
 			'meta'                => array(
 				'annotations' => array(
@@ -1211,7 +1255,8 @@ function mcp_wpsl_register_abilities(): void {
 				);
 			},
 			'permission_callback' => static function (): bool {
-				return current_user_can( 'edit_posts' );
+				$type = get_post_type_object( 'wpsl_stores' );
+				return $type && current_user_can( $type->cap->edit_posts );
 			},
 			'meta'                => array(
 				'annotations' => array(
@@ -1265,7 +1310,7 @@ function mcp_wpsl_register_abilities(): void {
 					return array( 'success' => false, 'message' => 'template_id is required.' );
 				}
 
-				$available_ids = array_column( mcp_wpsl_list_templates(), 'id' );
+				$available_ids = array_column( array_filter( mcp_wpsl_list_templates(), static function ( $template ): bool { return 'yes' === $template['exists']; } ), 'id' );
 				if ( ! in_array( $template_id, $available_ids, true ) ) {
 					return array( 'success' => false, 'message' => 'Unknown WPSL template_id.' );
 				}
@@ -1288,6 +1333,10 @@ function mcp_wpsl_register_abilities(): void {
 				}
 
 				update_option( 'wpsl_settings', $settings );
+				if ( mcp_wpsl_get_settings() !== $settings ) {
+					return array( 'success' => false, 'message' => 'WPSL settings were not saved.' );
+				}
+				mcp_wpsl_clear_transients();
 
 				return array(
 					'success'           => true,
@@ -1297,7 +1346,7 @@ function mcp_wpsl_register_abilities(): void {
 				);
 			},
 			'permission_callback' => static function (): bool {
-				return current_user_can( 'manage_options' );
+				return current_user_can( 'manage_wpsl_settings' );
 			},
 			'meta'                => array(
 				'annotations' => array(
@@ -1345,7 +1394,7 @@ function mcp_wpsl_register_abilities(): void {
 					}
 
 					if ( 'template_id' === $key ) {
-						$available_ids = array_column( mcp_wpsl_list_templates(), 'id' );
+						$available_ids = array_column( array_filter( mcp_wpsl_list_templates(), static function ( $template ): bool { return 'yes' === $template['exists']; } ), 'id' );
 						if ( ! in_array( $sanitized, $available_ids, true ) ) {
 							$skipped[] = $key;
 							continue;
@@ -1356,20 +1405,31 @@ function mcp_wpsl_register_abilities(): void {
 					$updated[ $key ]  = $sanitized;
 				}
 
+				if ( empty( $updated ) ) {
+					return array( 'success' => false, 'updated' => array(), 'skipped' => $skipped, 'message' => 'No supported valid settings were supplied.' );
+				}
 				if ( empty( $input['dry_run'] ) ) {
+					$previous = mcp_wpsl_get_settings();
 					update_option( 'wpsl_settings', $settings );
+					if ( mcp_wpsl_get_settings() !== $settings ) {
+						return array( 'success' => false, 'message' => 'WPSL settings were not saved.' );
+					}
+					if ( isset( $updated['permalinks'] ) && ( $previous['permalinks'] ?? null ) !== $updated['permalinks'] ) {
+						delete_option( 'mcp_wpsl_version' );
+					}
+					mcp_wpsl_clear_transients();
 				}
 
 				return array(
 					'success'  => true,
 					'updated'  => $updated,
 					'skipped'  => $skipped,
-					'settings' => $settings,
+					'settings' => mcp_wpsl_public_settings( $settings ),
 					'message'  => empty( $input['dry_run'] ) ? 'WPSL settings updated.' : 'Dry run only. No settings saved.',
 				);
 			},
 			'permission_callback' => static function (): bool {
-				return current_user_can( 'manage_options' );
+				return current_user_can( 'manage_wpsl_settings' );
 			},
 			'meta'                => array(
 				'annotations' => array(
@@ -1426,13 +1486,16 @@ function mcp_wpsl_register_abilities(): void {
 				$previous = mcp_wpsl_get_permalink_base_translations();
 				if ( empty( $input['dry_run'] ) ) {
 					update_option( MCP_WPSL_BASE_TRANSLATIONS, $translations, false );
-					flush_rewrite_rules( false );
+					if ( mcp_wpsl_get_permalink_base_translations() !== $translations ) {
+						return array( 'success' => false, 'message' => 'Permalink mappings were not saved.' );
+					}
+					delete_option( 'mcp_wpsl_version' );
 				}
 
 				return array(
 					'success'      => true,
-					'previous'     => $previous,
-					'translations' => $translations,
+					'previous'     => (object) $previous,
+					'translations' => (object) $translations,
 					'message'      => empty( $input['dry_run'] ) ? 'WPSL permalink base translations updated.' : 'Dry run only. No settings saved.',
 				);
 			},
@@ -1442,7 +1505,7 @@ function mcp_wpsl_register_abilities(): void {
 			'meta'                => array(
 				'annotations' => array(
 					'readonly'    => false,
-					'destructive' => false,
+					'destructive' => true,
 					'idempotent'  => true,
 				),
 			),
@@ -1453,7 +1516,7 @@ function mcp_wpsl_register_abilities(): void {
 		'wpsl/update-label-translations',
 		array(
 			'label'               => 'Update WP Store Locator Label Translations',
-			'description'         => 'Configures language-specific WPSL frontend labels without changing the global Store Locator settings.',
+			'description'         => 'Configures the search field label and search button text per language for the dynamic_columns template. Other labels remain owned by WP Store Locator.',
 			'category'            => 'site',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -1478,18 +1541,26 @@ function mcp_wpsl_register_abilities(): void {
 			),
 			'execute_callback'    => static function ( $input = array() ): array {
 				$input        = is_array( $input ) ? $input : array();
+				foreach ( $input['translations'] ?? array() as $labels ) {
+					if ( ! is_array( $labels ) || array_diff( array_keys( $labels ), mcp_wpsl_supported_label_keys() ) ) {
+						return array( 'success' => false, 'message' => 'Only search_label and search_btn_label are supported by the columns template.' );
+					}
+				}
 				$translations = mcp_wpsl_sanitize_label_translations( $input['translations'] ?? array() );
 				$previous     = mcp_wpsl_get_label_translations();
 
 				if ( empty( $input['dry_run'] ) ) {
 					update_option( MCP_WPSL_LABEL_TRANSLATIONS, $translations, false );
+					if ( mcp_wpsl_get_label_translations() !== $translations ) {
+						return array( 'success' => false, 'message' => 'Label translations were not saved.' );
+					}
 					mcp_wpsl_clear_transients();
 				}
 
 				return array(
 					'success'      => true,
-					'previous'     => $previous,
-					'translations' => $translations,
+					'previous'     => (object) $previous,
+					'translations' => (object) $translations,
 					'message'      => empty( $input['dry_run'] ) ? 'WPSL label translations updated.' : 'Dry run only. No settings saved.',
 				);
 			},
@@ -1499,7 +1570,7 @@ function mcp_wpsl_register_abilities(): void {
 			'meta'                => array(
 				'annotations' => array(
 					'readonly'    => false,
-					'destructive' => false,
+					'destructive' => true,
 					'idempotent'  => true,
 				),
 			),
@@ -1540,12 +1611,15 @@ function mcp_wpsl_register_abilities(): void {
 
 				if ( empty( $input['dry_run'] ) ) {
 					update_option( MCP_WPSL_NAV_SOURCE_LINKS, $mappings, false );
+					if ( mcp_wpsl_get_nav_source_language_links() !== $mappings ) {
+						return array( 'success' => false, 'message' => 'Navigation language mappings were not saved.' );
+					}
 				}
 
 				return array(
 					'success'  => true,
-					'previous' => $previous,
-					'mappings' => $mappings,
+					'previous' => (object) $previous,
+					'mappings' => (object) $mappings,
 					'message'  => empty( $input['dry_run'] ) ? 'WPSL navigation source language links updated.' : 'Dry run only. No settings saved.',
 				);
 			},
@@ -1555,7 +1629,7 @@ function mcp_wpsl_register_abilities(): void {
 			'meta'                => array(
 				'annotations' => array(
 					'readonly'    => false,
-					'destructive' => false,
+					'destructive' => true,
 					'idempotent'  => true,
 				),
 			),
@@ -1584,41 +1658,11 @@ function mcp_wpsl_register_abilities(): void {
 			),
 			'output_schema'       => array( 'type' => 'object' ),
 			'execute_callback'    => static function ( $input = array() ): array {
-				$input = is_array( $input ) ? $input : array();
-				$title = isset( $input['title'] ) ? sanitize_text_field( (string) $input['title'] ) : '';
-				if ( '' === $title ) {
-					return array( 'success' => false, 'message' => 'title is required.' );
-				}
-
-				$post_id = wp_insert_post(
-					array(
-						'post_type'    => 'wpsl_stores',
-						'post_status'  => isset( $input['status'] ) ? sanitize_key( (string) $input['status'] ) : 'draft',
-						'post_title'   => $title,
-						'post_name'    => isset( $input['slug'] ) ? sanitize_title( (string) $input['slug'] ) : '',
-						'post_content' => isset( $input['content'] ) ? wp_kses_post( (string) $input['content'] ) : '',
-						'post_excerpt' => isset( $input['excerpt'] ) ? sanitize_textarea_field( (string) $input['excerpt'] ) : '',
-					),
-					true
-				);
-
-				if ( is_wp_error( $post_id ) ) {
-					return array( 'success' => false, 'message' => $post_id->get_error_message() );
-				}
-
-				if ( isset( $input['meta'] ) && is_array( $input['meta'] ) ) {
-					mcp_wpsl_update_store_meta( (int) $post_id, $input['meta'] );
-				}
-
-				if ( isset( $input['categories'] ) && is_array( $input['categories'] ) ) {
-					mcp_wpsl_update_store_categories( (int) $post_id, $input['categories'] );
-				}
-
-				mcp_wpsl_clear_transients();
-				return array( 'success' => true, 'store' => mcp_wpsl_store_response( get_post( (int) $post_id ) ) );
+				return mcp_wpsl_save_store( is_array( $input ) ? $input : array() );
 			},
 			'permission_callback' => static function (): bool {
-				return current_user_can( 'publish_posts' );
+				$type = get_post_type_object( 'wpsl_stores' );
+				return $type && current_user_can( $type->cap->create_posts );
 			},
 			'meta'                => array(
 				'annotations' => array(
@@ -1654,48 +1698,15 @@ function mcp_wpsl_register_abilities(): void {
 			'output_schema'       => array( 'type' => 'object' ),
 			'execute_callback'    => static function ( $input = array() ): array {
 				$input = is_array( $input ) ? $input : array();
-				$id    = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
-				$post  = $id ? get_post( $id ) : null;
-				if ( ! $post || 'wpsl_stores' !== $post->post_type ) {
-					return array( 'success' => false, 'message' => 'WPSL store not found.' );
+				$id = isset( $input['id'] ) ? absint( $input['id'] ) : 0;
+				if ( ! $id ) {
+					return array( 'success' => false, 'message' => 'Store ID is required.' );
 				}
-
-				$updates = array( 'ID' => $id );
-				if ( isset( $input['title'] ) ) {
-					$updates['post_title'] = sanitize_text_field( (string) $input['title'] );
-				}
-				if ( isset( $input['content'] ) ) {
-					$updates['post_content'] = wp_kses_post( (string) $input['content'] );
-				}
-				if ( isset( $input['excerpt'] ) ) {
-					$updates['post_excerpt'] = sanitize_textarea_field( (string) $input['excerpt'] );
-				}
-				if ( isset( $input['status'] ) ) {
-					$updates['post_status'] = sanitize_key( (string) $input['status'] );
-				}
-				if ( isset( $input['slug'] ) ) {
-					$updates['post_name'] = sanitize_title( (string) $input['slug'] );
-				}
-
-				if ( count( $updates ) > 1 ) {
-					$result = wp_update_post( $updates, true );
-					if ( is_wp_error( $result ) ) {
-						return array( 'success' => false, 'message' => $result->get_error_message() );
-					}
-				}
-
-				if ( isset( $input['meta'] ) && is_array( $input['meta'] ) ) {
-					mcp_wpsl_update_store_meta( $id, $input['meta'] );
-				}
-				if ( isset( $input['categories'] ) && is_array( $input['categories'] ) ) {
-					mcp_wpsl_update_store_categories( $id, $input['categories'] );
-				}
-
-				mcp_wpsl_clear_transients();
-				return array( 'success' => true, 'store' => mcp_wpsl_store_response( get_post( $id ) ) );
+				return mcp_wpsl_save_store( $input, $id );
 			},
 			'permission_callback' => static function (): bool {
-				return current_user_can( 'edit_posts' );
+				$type = get_post_type_object( 'wpsl_stores' );
+				return $type && current_user_can( $type->cap->edit_posts );
 			},
 			'meta'                => array(
 				'annotations' => array(
@@ -1720,14 +1731,15 @@ function mcp_wpsl_register_abilities(): void {
 			),
 			'output_schema'       => array( 'type' => 'object' ),
 			'execute_callback'    => static function (): array {
+				$cleared = mcp_wpsl_clear_transients();
 				return array(
-					'success' => true,
-					'deleted' => mcp_wpsl_clear_transients(),
-					'message' => 'WPSL transients cleared.',
+					'success' => $cleared > 0,
+					'deleted' => $cleared,
+					'message' => $cleared ? 'Native WPSL cache invalidation completed; the native method does not return a deletion count.' : 'Native WPSL cache invalidation is unavailable.',
 				);
 			},
 			'permission_callback' => static function (): bool {
-				return current_user_can( 'manage_options' );
+				return current_user_can( 'manage_wpsl_settings' );
 			},
 			'meta'                => array(
 				'annotations' => array(

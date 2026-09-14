@@ -2,13 +2,13 @@
 Contributors: basicus
 Tags: mcp, ai, automation, abilities-api, store-locator
 Requires at least: 6.9
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.1.17
+Stable tag: 0.1.18
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.txt
 
-Narrow MCP abilities and maintained frontend template support for WP Store Locator.
+Maintain native WP Store Locator records, search settings and dynamic location listings through authenticated WordPress abilities.
 
 == Description ==
 
@@ -16,7 +16,21 @@ Adds authenticated WordPress Abilities API tools for WP Store Locator maintenanc
 
 The abilities cover WPSL status, settings, templates, stores, categories, and transient cleanup. The plugin does not duplicate store content into Elementor or static page content. Store data remains owned by WP Store Locator.
 
+Requires WP Store Locator 2.x, WordPress 6.9 or later with the Abilities API, and PHP 8.0 or later. An authenticated ability connection such as MCP Expose Abilities makes the tools available to an assistant. The locator's map service remains configured in WP Store Locator.
+
+The 12 abilities inspect status, stores and categories; create or update store records; choose an installed template; update supported settings; configure translated URL bases, the two columns-template search labels and source-language menu links; and clear the native autoload cache. This add-on does not geocode addresses, import CSV files, delete stores or write opening hours.
+
+Documentation: https://devenia.com/plugins/mcp-abilities-store-locator/
+
 == Changelog ==
+
+= 0.1.18 =
+* Enforced native store and per-object permissions, preserved literal content and metadata, and rejected invalid coordinates and unknown categories before saving.
+* Preserved native dropdown lists and corrected supported setting names; map credentials are no longer returned by status or settings responses.
+* Verified saved settings and exposed unavailable cache cleanup accurately, including native cache loading for API requests.
+* Corrected WPML and Polylang lookups, retained native menu rendering and rewrite routing, and limited custom label updates to the two labels used by the columns template.
+* Escaped the search input value in the maintained template.
+
 
 = 0.1.17 =
 * Removed built-in language-specific label overrides; frontend labels remain configurable through the public translation ability.

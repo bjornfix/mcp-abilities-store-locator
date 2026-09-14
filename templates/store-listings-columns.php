@@ -36,7 +36,7 @@ $output .= "\t\t\t" . '<form autocomplete="off">' . "\r\n";
 $output .= "\t\t\t" . '<div class="wpsl-input">' . "\r\n";
 $output .= "\t\t\t\t" . '<div><label for="wpsl-search-input">' . esc_html( $search_label ) . '</label></div>' . "\r\n";
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- This is WP Store Locator's documented template filter.
-$output .= "\t\t\t\t" . '<input id="wpsl-search-input" type="text" value="' . apply_filters( 'wpsl_search_input', '' ) . '" name="wpsl-search-input" placeholder="" aria-required="true" />' . "\r\n";
+$output .= "\t\t\t\t" . '<input id="wpsl-search-input" type="text" value="' . esc_attr( apply_filters( 'wpsl_search_input', '' ) ) . '" name="wpsl-search-input" placeholder="" aria-required="true" />' . "\r\n";
 $output .= "\t\t\t" . '</div>' . "\r\n";
 
 if ( $wpsl_settings['radius_dropdown'] || $wpsl_settings['results_dropdown'] ) {
