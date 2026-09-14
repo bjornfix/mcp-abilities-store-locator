@@ -4,7 +4,7 @@ Tags: mcp, ai, automation, abilities-api, store-locator
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.1.18
+Stable tag: 0.1.19
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.txt
 
@@ -24,7 +24,7 @@ Documentation: https://devenia.com/plugins/mcp-abilities-store-locator/
 
 == Changelog ==
 
-= 0.1.18 =
+= 0.1.19 =
 * Enforced native store and per-object permissions, preserved literal content and metadata, and rejected invalid coordinates and unknown categories before saving.
 * Preserved native dropdown lists and corrected supported setting names; map credentials are no longer returned by status or settings responses.
 * Verified saved settings and exposed unavailable cache cleanup accurately, including native cache loading for API requests.

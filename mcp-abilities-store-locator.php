@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Store Locator
  * Plugin URI: https://devenia.com/plugins/mcp-abilities-store-locator/
  * Description: Narrow MCP abilities and maintained frontend template support for WP Store Locator.
- * Version: 0.1.18
+ * Version: 0.1.19
  * Author: basicus
  * Author URI: https://profiles.wordpress.org/basicus/
  * License: GPL-2.0+
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 const MCP_WPSL_COLUMNS_TEMPLATE = 'dynamic_columns';
-const MCP_WPSL_VERSION             = '0.1.18';
+const MCP_WPSL_VERSION             = '0.1.19';
 const MCP_WPSL_BASE_TRANSLATIONS   = 'mcp_wpsl_permalink_base_translations';
 const MCP_WPSL_LABEL_TRANSLATIONS  = 'mcp_wpsl_label_translations';
 const MCP_WPSL_NAV_SOURCE_LINKS    = 'mcp_wpsl_nav_source_language_links';
@@ -951,17 +951,18 @@ function mcp_wpsl_save_store( array $input, int $post_id = 0 ): array {
  * Clear WPSL autoload transients using the plugin method when available.
  */
 function mcp_wpsl_clear_transients(): int {
-	global $wpsl_admin;
+	$admin = $GLOBALS['wpsl_admin'] ?? null;
 
-	if ( ! is_object( $wpsl_admin ) && defined( 'WPSL_PLUGIN_DIR' ) && is_readable( WPSL_PLUGIN_DIR . 'admin/class-admin.php' ) ) {
+	if ( ! is_object( $admin ) && defined( 'WPSL_PLUGIN_DIR' ) && is_readable( WPSL_PLUGIN_DIR . 'admin/class-admin.php' ) ) {
 		require_once WPSL_PLUGIN_DIR . 'admin/class-admin.php';
-		if ( ! is_object( $wpsl_admin ) && class_exists( 'WPSL_Admin' ) ) {
-			$wpsl_admin = new WPSL_Admin();
+		$admin = $GLOBALS['wpsl_admin'] ?? null;
+		if ( ! is_object( $admin ) && class_exists( 'WPSL_Admin' ) ) {
+			$admin = new WPSL_Admin();
 		}
 	}
 
-	if ( is_object( $wpsl_admin ) && method_exists( $wpsl_admin, 'delete_autoload_transient' ) ) {
-		$wpsl_admin->delete_autoload_transient();
+	if ( is_object( $admin ) && method_exists( $admin, 'delete_autoload_transient' ) ) {
+		$admin->delete_autoload_transient();
 		return 1;
 	}
 
