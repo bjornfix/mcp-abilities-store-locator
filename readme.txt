@@ -4,7 +4,7 @@ Tags: mcp, ai, automation, abilities-api, store-locator
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.1.19
+Stable tag: 0.1.20
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.txt
 
@@ -22,7 +22,14 @@ The 12 abilities inspect status, stores and categories; create or update store r
 
 Documentation: https://devenia.com/plugins/mcp-abilities-store-locator/
 
+== Update notifications ==
+
+For update notifications in WordPress, install [Devenia MCP Updater](https://downloads.devenia.com/devenia-mcp-updater.zip). The updater is optional. You choose which plugins update automatically through WordPress.
+
 == Changelog ==
+
+= 0.1.20 =
+* Add one dismissible Plugins-screen reminder when Devenia MCP Updater is missing or inactive, with persistent install or activate links. Automatic updates remain your choice in WordPress.
 
 = 0.1.19 =
 * Enforced native store and per-object permissions, preserved literal content and metadata, and rejected invalid coordinates and unknown categories before saving.
