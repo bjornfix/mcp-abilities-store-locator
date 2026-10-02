@@ -618,10 +618,13 @@ add_filter( 'wpsl_templates', 'mcp_wpsl_register_columns_template' );
  * GET requests and cookies must never start a footer search.
  */
 function mcp_wpsl_get_footer_search_post_value(): string {
-	if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) || ! isset( $_POST['wpsl-widget-search'] ) || ! is_string( $_POST['wpsl-widget-search'] ) ) {
+	$request_method = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ?? '' ) );
+	// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Public read-only location search; no account or persistent state is changed.
+	if ( 'POST' !== $request_method || ! isset( $_POST['wpsl-widget-search'] ) || ! is_string( $_POST['wpsl-widget-search'] ) ) {
 		return '';
 	}
 
+	// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw scalar is bounded and compared with sanitization below; changed input is rejected and never output here.
 	$value = trim( wp_unslash( $_POST['wpsl-widget-search'] ) );
 	if ( '' === $value || strlen( $value ) > 200 || 1 !== preg_match( '/[\p{L}\p{N}]/u', $value ) || sanitize_text_field( $value ) !== $value ) {
 		return '';
