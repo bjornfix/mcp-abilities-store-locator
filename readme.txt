@@ -4,7 +4,7 @@ Tags: mcp, ai, automation, abilities-api, store-locator
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.1.21
+Stable tag: 0.1.22
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.txt
 
@@ -27,6 +27,9 @@ Documentation: https://devenia.com/plugins/mcp-abilities-store-locator/
 For update notifications in WordPress, install [Devenia MCP Updater](https://downloads.devenia.com/devenia-mcp-updater.zip). The updater is optional. You choose which plugins update automatically through WordPress.
 
 == Changelog ==
+
+= 0.1.22 =
+* Keep OpenStreetMap directions aligned with the current location search in the maintained columns template, without adding geocoding requests or changing store destinations.
 
 = 0.1.21 =
 * Start native WP Store Locator 3 searches after valid footer location submissions to the maintained columns template. Native geocoding, radius, sorting and map provider remain authoritative.

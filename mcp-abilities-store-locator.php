@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Store Locator
  * Plugin URI: https://devenia.com/plugins/mcp-abilities-store-locator/
  * Description: Narrow MCP abilities and maintained frontend template support for WP Store Locator.
- * Version: 0.1.21
+ * Version: 0.1.22
  * Author: basicus
  * Author URI: https://profiles.wordpress.org/basicus/
  * License: GPL-2.0+
@@ -27,7 +27,7 @@ add_action( 'admin_init', static function () {
 } );
 
 const MCP_WPSL_COLUMNS_TEMPLATE = 'dynamic_columns';
-const MCP_WPSL_VERSION             = '0.1.21';
+const MCP_WPSL_VERSION             = '0.1.22';
 const MCP_WPSL_BASE_TRANSLATIONS   = 'mcp_wpsl_permalink_base_translations';
 const MCP_WPSL_LABEL_TRANSLATIONS  = 'mcp_wpsl_label_translations';
 const MCP_WPSL_NAV_SOURCE_LINKS    = 'mcp_wpsl_nav_source_language_links';
@@ -651,6 +651,36 @@ function mcp_wpsl_enable_footer_search( array $settings ): array {
 	return $settings;
 }
 add_filter( 'wpsl_js_settings', 'mcp_wpsl_enable_footer_search', 20 );
+
+/**
+ * Keep native OpenStreetMap directions aligned with the current postal search.
+ *
+ * @param array<string,mixed> $settings Native Store Locator JavaScript settings.
+ * @return array<string,mixed>
+ */
+function mcp_wpsl_add_direction_origin_script( array $settings ): array {
+	if ( 'osm' !== ( $settings['api']['provider'] ?? '' ) || MCP_WPSL_COLUMNS_TEMPLATE !== ( $settings['ux']['templateId'] ?? '' ) || ! wp_script_is( 'wpsl', 'registered' ) ) {
+		return $settings;
+	}
+
+	static $added = false;
+	if ( $added ) {
+		return $settings;
+	}
+
+	$path = __DIR__ . '/assets/directions-origin.js';
+	if ( ! is_readable( $path ) ) {
+		return $settings;
+	}
+
+	$script = file_get_contents( $path );
+	if ( false !== $script ) {
+		$added = wp_add_inline_script( 'wpsl', $script, 'before' );
+	}
+
+	return $settings;
+}
+add_filter( 'wpsl_js_settings', 'mcp_wpsl_add_direction_origin_script', 30 );
 
 /**
  * Check if the current WPSL setting selects the maintained columns template.
