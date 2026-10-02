@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Store Locator
  * Plugin URI: https://devenia.com/plugins/mcp-abilities-store-locator/
  * Description: Narrow MCP abilities and maintained frontend template support for WP Store Locator.
- * Version: 0.1.20
+ * Version: 0.1.21
  * Author: basicus
  * Author URI: https://profiles.wordpress.org/basicus/
  * License: GPL-2.0+
@@ -27,7 +27,7 @@ add_action( 'admin_init', static function () {
 } );
 
 const MCP_WPSL_COLUMNS_TEMPLATE = 'dynamic_columns';
-const MCP_WPSL_VERSION             = '0.1.20';
+const MCP_WPSL_VERSION             = '0.1.21';
 const MCP_WPSL_BASE_TRANSLATIONS   = 'mcp_wpsl_permalink_base_translations';
 const MCP_WPSL_LABEL_TRANSLATIONS  = 'mcp_wpsl_label_translations';
 const MCP_WPSL_NAV_SOURCE_LINKS    = 'mcp_wpsl_nav_source_language_links';
@@ -610,6 +610,44 @@ function mcp_wpsl_register_columns_template( array $templates ): array {
 	return $templates;
 }
 add_filter( 'wpsl_templates', 'mcp_wpsl_register_columns_template' );
+
+/**
+ * Accept a bounded location submitted by the legacy footer search form.
+ *
+ * This is a read-only search, not an authenticated state-changing action.
+ * GET requests and cookies must never start a footer search.
+ */
+function mcp_wpsl_get_footer_search_post_value(): string {
+	if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) || ! isset( $_POST['wpsl-widget-search'] ) || ! is_string( $_POST['wpsl-widget-search'] ) ) {
+		return '';
+	}
+
+	$value = trim( wp_unslash( $_POST['wpsl-widget-search'] ) );
+	if ( '' === $value || strlen( $value ) > 200 || 1 !== preg_match( '/[\p{L}\p{N}]/u', $value ) || sanitize_text_field( $value ) !== $value ) {
+		return '';
+	}
+
+	return $value;
+}
+
+/**
+ * Start the native search for a valid footer submission to our columns template.
+ *
+ * Native WP Store Locator still owns geocoding, AJAX, radius and sorting.
+ * Existing widget integrations and unrelated settings remain authoritative.
+ *
+ * @param array<string,mixed> $settings Native Store Locator JavaScript settings.
+ * @return array<string,mixed>
+ */
+function mcp_wpsl_enable_footer_search( array $settings ): array {
+	if ( MCP_WPSL_COLUMNS_TEMPLATE !== ( $settings['ux']['templateId'] ?? '' ) || ! isset( $settings['search'] ) || ! is_array( $settings['search'] ) || ! empty( $settings['search']['widgetEnabled'] ) || '' === mcp_wpsl_get_footer_search_post_value() ) {
+		return $settings;
+	}
+
+	$settings['search']['widgetEnabled'] = 1;
+	return $settings;
+}
+add_filter( 'wpsl_js_settings', 'mcp_wpsl_enable_footer_search', 20 );
 
 /**
  * Check if the current WPSL setting selects the maintained columns template.
