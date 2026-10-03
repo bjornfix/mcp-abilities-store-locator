@@ -2,13 +2,13 @@
 
 Keep a branch's address, map coordinates and contact details together in WP Store Locator. An AI assistant can find the existing store record, update supported fields and check the saved result without creating another directory inside a page builder.
 
-[![Release 0.1.22](https://img.shields.io/badge/release-0.1.22-blue.svg)](https://downloads.devenia.com/mcp-abilities-store-locator.zip)
+[![Release 0.1.23](https://img.shields.io/badge/release-0.1.23-blue.svg)](https://downloads.devenia.com/mcp-abilities-store-locator.zip)
 [![License: GPL v2 or later](https://img.shields.io/badge/License-GPL%20v2%2B-blue.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
 [![WordPress 6.9+](https://img.shields.io/badge/WordPress-6.9%2B-blue.svg)](https://wordpress.org/)
 [![PHP 8.0+](https://img.shields.io/badge/PHP-8.0%2B-purple.svg)](https://www.php.net/)
 
 **Tested up to:** WordPress 7.1
-**Stable tag:** 0.1.20
+**Stable tag:** 0.1.23
 **License:** GPLv2 or later
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html
 **Tags:** mcp, ai, automation, abilities-api, store-locator
@@ -185,6 +185,10 @@ For update notifications in WordPress, install [Devenia MCP Updater](https://dow
 Download the [plugin ZIP](https://downloads.devenia.com/mcp-abilities-store-locator.zip), upload it in **Plugins → Add New → Upload Plugin**, and activate it alongside WP Store Locator. Confirm discovery through the authenticated connection.
 
 ## Changelog
+
+### 0.1.23
+
+- Register native store rewrite rules for the translated base after WPML removes the language directory from the request path. The current language remains owned by WPML, and existing full-prefix routes remain supported.
 
 ### 0.1.22
 

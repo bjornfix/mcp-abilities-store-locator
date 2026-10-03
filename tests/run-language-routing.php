@@ -3,6 +3,8 @@
 define('ABSPATH',__DIR__.'/');
 function add_action(...$args){}
 function add_filter(...$args){}
+function post_type_exists($type){return $GLOBALS['fixture_post_type_available']??true;}
+function add_rewrite_rule($regex,$query,$position){$GLOBALS['fixture_rewrites'][$regex]=$query;}
 function sanitize_key($v){return strtolower(preg_replace('/[^a-zA-Z0-9_-]/','',$v));}
 function sanitize_title($v){return sanitize_key($v);}
 function get_option($name,$default=false){return $GLOBALS['fixture_options'][$name]??$default;}
@@ -24,5 +26,27 @@ $checks['Directory base preserves native suffix']='https://example.com/subsite/d
 foreach(array('https://de.example.com/stores/branch/','https://example.com/subsite/stores/branch/?lang=de') as $url){$checks['Native language URL unchanged '.$url]=$url===mcp_wpsl_filter_translated_store_permalink($url,$post);}
 $post->post_status='draft';$url='https://example.com/subsite/de/stores/branch/';$checks['Draft link unchanged']=$url===mcp_wpsl_filter_translated_store_permalink($url,$post);
 $_SERVER['REQUEST_URI']='/subsite/de/filialen/branch/?view=1';$checks['Subdirectory request path']='/de/filialen/branch/'===mcp_wpsl_get_request_path();
+$GLOBALS['fixture_options'][MCP_WPSL_BASE_TRANSLATIONS]=array('de'=>'filialen','en'=>'stores','fr'=>'stores');
+$GLOBALS['fixture_rewrites']=array();
+mcp_wpsl_register_translated_store_rewrites();
+$match=static function($path) {
+ foreach($GLOBALS['fixture_rewrites'] as $regex=>$query) {
+  if(preg_match('#'.$regex.'#',$path,$matches)) {
+   parse_str(str_replace('$matches[1]',$matches[1],substr($query,strlen('index.php?'))),$vars);
+   return $vars;
+  }
+ }
+ return null;
+};
+$checks['Explicit language-directory route preserved']=array('post_type'=>'wpsl_stores','name'=>'branch','lang'=>'de')===$match('de/filialen/branch/');
+$checks['WPML normalized directory route resolves store']=array('post_type'=>'wpsl_stores','name'=>'branch')===$match('stores/branch/');
+$checks['Shared translated base keeps native request language']=is_array($match('stores/branch/')) && !isset($match('stores/branch/')['lang']);
+$checks['Other translated base resolves after prefix normalization']=array('post_type'=>'wpsl_stores','name'=>'branch')===$match('filialen/branch');
+$checks['Unrelated article route unchanged']=null===$match('articles/branch/');
+$checks['Additional path segments unchanged']=null===$match('stores/branch/details/');
+$GLOBALS['fixture_post_type_available']=false;
+$GLOBALS['fixture_rewrites']=array();
+mcp_wpsl_register_translated_store_rewrites();
+$checks['Unavailable store type does not register routes']=array()===$GLOBALS['fixture_rewrites'];
 foreach($checks as $name=>$ok){echo($ok?'PASS: ':'FAIL: ').$name."\n";}
 exit(in_array(false,$checks,true)?1:0);
