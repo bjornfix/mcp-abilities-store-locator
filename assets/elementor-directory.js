@@ -25,6 +25,17 @@
     document.addEventListener('submit', normalizeInput, true);
     document.addEventListener('click', normalizeInput, true);
     document.addEventListener('keydown', normalizeInput, true);
+    document.addEventListener('click', function (event) {
+        var link = event.target.closest && event.target.closest('.wpsl-skip-to-results');
+        var directory = document.getElementById('mcp-wpsl-directory-results');
+        if (!wrapper() || !link || !link.closest('.mcp-wpsl-elementor') || !directory) {
+            return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        directory.focus({preventScroll: true});
+        directory.scrollIntoView({block: 'start'});
+    }, true);
     function synchronize(response) {
         if (!wrapper()) {
             return;
