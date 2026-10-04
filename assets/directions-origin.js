@@ -1,4 +1,4 @@
-/* Isolated candidate only. Uses WP Store Locator 3.0.3 frontend filters. */
+/* Uses WP Store Locator 3 frontend filters. */
 (function (hooks, settings) {
     'use strict';
     if (!hooks || !settings || !settings.api || settings.api.provider !== 'osm') {
@@ -7,7 +7,7 @@
     var currentOrigin = '';
     function columnsActive() {
         var wrapper = document.getElementById('wpsl-wrap');
-        return wrapper && wrapper.classList.contains('mcp-wpsl-columns');
+        return wrapper && (wrapper.classList.contains('mcp-wpsl-columns') || wrapper.classList.contains('mcp-wpsl-elementor'));
     }
     function coordinate(value, limit) {
         if ((typeof value !== 'number' && typeof value !== 'string') || String(value).trim() === '') {

@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Store Locator
  * Plugin URI: https://devenia.com/plugins/mcp-abilities-store-locator/
  * Description: Narrow MCP abilities and maintained frontend template support for WP Store Locator.
- * Version: 0.1.23
+ * Version: 0.1.24
  * Author: basicus
  * Author URI: https://profiles.wordpress.org/basicus/
  * License: GPL-2.0+
@@ -27,10 +27,12 @@ add_action( 'admin_init', static function () {
 } );
 
 const MCP_WPSL_COLUMNS_TEMPLATE = 'dynamic_columns';
-const MCP_WPSL_VERSION             = '0.1.23';
+const MCP_WPSL_VERSION             = '0.1.24';
 const MCP_WPSL_BASE_TRANSLATIONS   = 'mcp_wpsl_permalink_base_translations';
 const MCP_WPSL_LABEL_TRANSLATIONS  = 'mcp_wpsl_label_translations';
 const MCP_WPSL_NAV_SOURCE_LINKS    = 'mcp_wpsl_nav_source_language_links';
+
+require_once __DIR__ . '/includes/frontend-directory.php';
 
 /**
  * Return configured language codes that may be visible in frontend URL prefixes.
@@ -143,7 +145,7 @@ function mcp_wpsl_current_language_code(): string {
  * @return array<int,string>
  */
 function mcp_wpsl_supported_label_keys(): array {
-	return array( 'search_label', 'search_btn_label' );
+	return array( 'search_label', 'search_btn_label', 'directions_label', 'no_results_label', 'adjust_search_label', 'skip_to_results_label' );
 }
 
 /**
@@ -613,6 +615,13 @@ function mcp_wpsl_register_columns_template( array $templates ): array {
 		'name' => __( 'Dynamic columns', 'mcp-abilities-store-locator' ),
 		'path' => plugin_dir_path( __FILE__ ) . 'templates/store-listings-columns.php',
 	);
+	if ( function_exists( 'wpsl_get_service' ) ) {
+		$templates[] = array(
+			'id'   => MCP_WPSL_ELEMENTOR_TEMPLATE,
+			'name' => __( 'Elementor directory', 'mcp-abilities-store-locator' ),
+			'path' => plugin_dir_path( __FILE__ ) . 'templates/store-listings-elementor.php',
+		);
+	}
 
 	return $templates;
 }
@@ -650,7 +659,7 @@ function mcp_wpsl_get_footer_search_post_value(): string {
  * @return array<string,mixed>
  */
 function mcp_wpsl_enable_footer_search( array $settings ): array {
-	if ( MCP_WPSL_COLUMNS_TEMPLATE !== ( $settings['ux']['templateId'] ?? '' ) || ! isset( $settings['search'] ) || ! is_array( $settings['search'] ) || ! empty( $settings['search']['widgetEnabled'] ) || '' === mcp_wpsl_get_footer_search_post_value() ) {
+	if ( ! in_array( $settings['ux']['templateId'] ?? '', array( MCP_WPSL_COLUMNS_TEMPLATE, MCP_WPSL_ELEMENTOR_TEMPLATE ), true ) || ! isset( $settings['search'] ) || ! is_array( $settings['search'] ) || ! empty( $settings['search']['widgetEnabled'] ) || '' === mcp_wpsl_get_footer_search_post_value() ) {
 		return $settings;
 	}
 
@@ -666,7 +675,7 @@ add_filter( 'wpsl_js_settings', 'mcp_wpsl_enable_footer_search', 20 );
  * @return array<string,mixed>
  */
 function mcp_wpsl_add_direction_origin_script( array $settings ): array {
-	if ( 'osm' !== ( $settings['api']['provider'] ?? '' ) || MCP_WPSL_COLUMNS_TEMPLATE !== ( $settings['ux']['templateId'] ?? '' ) || ! wp_script_is( 'wpsl', 'registered' ) ) {
+	if ( 'osm' !== ( $settings['api']['provider'] ?? '' ) || ! in_array( $settings['ux']['templateId'] ?? '', array( MCP_WPSL_COLUMNS_TEMPLATE, MCP_WPSL_ELEMENTOR_TEMPLATE ), true ) || ! wp_script_is( 'wpsl', 'registered' ) ) {
 		return $settings;
 	}
 
@@ -1600,7 +1609,7 @@ function mcp_wpsl_register_abilities(): void {
 		'wpsl/update-label-translations',
 		array(
 			'label'               => 'Update WP Store Locator Label Translations',
-			'description'         => 'Configures the search field label and search button text per language for the dynamic_columns template. Other labels remain owned by WP Store Locator.',
+			'description'         => 'Configures language-specific search, directions, no-results, search-help and skip-to-results labels for the maintained templates.',
 			'category'            => 'site',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -1627,7 +1636,7 @@ function mcp_wpsl_register_abilities(): void {
 				$input        = is_array( $input ) ? $input : array();
 				foreach ( $input['translations'] ?? array() as $labels ) {
 					if ( ! is_array( $labels ) || array_diff( array_keys( $labels ), mcp_wpsl_supported_label_keys() ) ) {
-						return array( 'success' => false, 'message' => 'Only search_label and search_btn_label are supported by the columns template.' );
+					return array( 'success' => false, 'message' => 'Unsupported maintained-template label key.' );
 					}
 				}
 				$translations = mcp_wpsl_sanitize_label_translations( $input['translations'] ?? array() );

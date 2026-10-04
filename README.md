@@ -2,24 +2,26 @@
 
 Keep a branch's address, map coordinates and contact details together in WP Store Locator. An AI assistant can find the existing store record, update supported fields and check the saved result without creating another directory inside a page builder.
 
-[![Release 0.1.23](https://img.shields.io/badge/release-0.1.23-blue.svg)](https://downloads.devenia.com/mcp-abilities-store-locator.zip)
+[![Release 0.1.24](https://img.shields.io/badge/release-0.1.24-blue.svg)](https://downloads.devenia.com/mcp-abilities-store-locator.zip)
 [![License: GPL v2 or later](https://img.shields.io/badge/License-GPL%20v2%2B-blue.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
 [![WordPress 6.9+](https://img.shields.io/badge/WordPress-6.9%2B-blue.svg)](https://wordpress.org/)
 [![PHP 8.0+](https://img.shields.io/badge/PHP-8.0%2B-purple.svg)](https://www.php.net/)
 
 **Tested up to:** WordPress 7.1
-**Stable tag:** 0.1.23
+**Stable tag:** 0.1.24
 **License:** GPLv2 or later
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html
 **Tags:** mcp, ai, automation, abilities-api, store-locator
 
 ## What It Does
 
-The add-on exposes 12 authenticated WordPress abilities for WP Store Locator 2.x. They read stores and categories, create or update store records, inspect and change supported settings, select an installed template and clear the locator's autoload cache.
+The add-on exposes 12 authenticated WordPress abilities for WP Store Locator. They read stores and categories, create or update store records, inspect and change supported settings, select an installed template and clear the locator's autoload cache.
 
 It also registers the `dynamic_columns` template. WP Store Locator continues to own the shortcode, map, search, result data and category filtering. The template arranges the result list into three columns on larger screens, two on tablets and one on smaller screens.
 
-Optional multilingual settings cover custom store URL bases for WPML language-directory URLs, the columns template's search field/button labels, and source-language links for native store menu items. The latter uses existing WPML or Polylang translation relationships; it does not create translations.
+On WP Store Locator 3, the optional `elementor_directory` template keeps native search and one map while an Elementor Pro Loop Grid renders the editable dealer rows. Search results filter and reorder those same native rows. No second store inventory is generated. Numeric postcodes joined to a city, such as `12345Berlin`, receive a separating space before native geocoding.
+
+Optional multilingual settings cover custom store URL bases for WPML language-directory URLs, maintained-template frontend labels, and source-language links for native store menu items. The latter uses existing WPML or Polylang translation relationships; it does not create translations.
 
 ## The Real Workflow
 
@@ -42,7 +44,7 @@ Other useful tasks include:
 - **Prepare a new branch:** search for an existing entry first, create a draft, add verified location/contact fields and assign existing categories before publication.
 - **Review a network of locations:** page through store records to find missing contact details or entries that need confirmation. The assistant must interpret those records; there is no automatic accuracy audit.
 - **Improve how visitors choose a location:** preview search radius/result-count settings, choose an installed template and check the public search on mobile.
-- **Review a multilingual locator:** adjust the two supported search labels or configured store links, then open each affected language to confirm the result.
+- **Review a multilingual locator:** adjust supported frontend labels or configured store links, then open each affected language to confirm the result.
 
 ## Before vs After
 
@@ -61,11 +63,11 @@ Retail groups, service networks and agencies maintaining sites that already use 
 
 - WordPress 6.9 or later with the Abilities API available.
 - PHP 8.0 or later. Use a maintained PHP release supported by the site.
-- An active WP Store Locator 2.x installation. Compatibility was checked with 2.3.23; this does not establish compatibility with WP Store Locator 3 preview releases.
+- An active WP Store Locator installation. Legacy abilities and the columns template support 2.x; the native Elementor directory requires WP Store Locator 3.0.3 or later and Elementor Pro Loop Grid.
 - An authenticated ability connection, such as [MCP Expose Abilities](https://devenia.com/plugins/mcp-expose-abilities/).
 - Native WP Store Locator permissions for the affected records or settings. Global multilingual mappings require `manage_options`.
 
-Configure the locator's map service in WP Store Locator. Its [Google Maps setup documentation](https://wpstorelocator.co/document/create-google-api-keys/) explains the required keys and provider setup for version 2. These abilities do not create map credentials, enable billing or validate provider charges.
+Configure the locator's map service in WP Store Locator. Provider choice, geocoding, radius, result limits and store coordinates remain owned by that plugin. These abilities do not create map credentials, enable billing or validate provider charges.
 
 ## Documentation
 
@@ -96,7 +98,7 @@ Configure the locator's map service in WP Store Locator. Its [Google Maps setup 
 | `wpsl/set-template` | Select an installed template, optionally with a dry run |
 | `wpsl/update-settings` | Update supported native settings, reporting invalid or unsupported keys in `skipped` |
 | `wpsl/update-permalink-base-translations` | Replace the configured WPML language-directory store-base map |
-| `wpsl/update-label-translations` | Replace `search_label` and `search_btn_label` overrides for the columns template |
+| `wpsl/update-label-translations` | Replace maintained-template search, directions, no-results, search-help and skip-to-results label overrides |
 | `wpsl/update-navigation-source-language-links` | Replace the frontend-language to source-language map for native store menu links |
 | `wpsl/clear-transients` | Invoke WP Store Locator's native autoload cache invalidation |
 
@@ -165,7 +167,16 @@ The supplied translation map is a complete replacement. Include any other langua
 }
 ```
 
-Other locator labels remain under WP Store Locator's native translation system. URL-base and menu-language mappings also replace their complete stored maps; inspect their current values with `wpsl/get-status` first.
+Supported keys are `search_label`, `search_btn_label`, `directions_label`, `no_results_label`, `adjust_search_label` and `skip_to_results_label`. Other locator labels remain under WP Store Locator's native translation system. URL-base and menu-language mappings also replace their complete stored maps; inspect their current values with `wpsl/get-status` first.
+
+### Use an editable native Elementor directory
+
+1. Place `[wpsl template="elementor_directory"]` in a native Elementor Shortcode or Text Editor widget. This renders one native locator map and its search controls.
+2. Add a native Elementor Pro Loop Grid below it. Use a Loop Item with native dynamic Post Title and Post URL, and `[wpsl_address]` for the current store's address.
+3. Set the Loop Grid Query ID to `mcp_wpsl_directory` and disable pagination. The query loads published store posts in the current language; native Elementor controls own the row design and initial ordering.
+4. Use native containers to position the map beside an introduction. Search results filter existing rows and preserve the locator's proximity order. Empty results use the native locator status message.
+
+The map uses WP Store Locator's chosen provider. Do not add a second `[wpsl_map]` for this directory. The original `dynamic_columns` template and unrelated Elementor grids remain unchanged.
 
 ## Safety and Ownership
 
@@ -185,6 +196,12 @@ For update notifications in WordPress, install [Devenia MCP Updater](https://dow
 Download the [plugin ZIP](https://downloads.devenia.com/mcp-abilities-store-locator.zip), upload it in **Plugins → Add New → Upload Plugin**, and activate it alongside WP Store Locator. Confirm discovery through the authenticated connection.
 
 ## Changelog
+
+### 0.1.24
+
+- Added an optional WP Store Locator 3 map/search template connected to one native Elementor Pro Loop Grid, preserving native search ordering and current-language rows.
+- Normalised numeric postcodes joined to city names before native search, preserving leading zeroes and other location formats.
+- Added configurable directions, no-results, search-help and skip-to-results translations for maintained templates.
 
 ### 0.1.23
 
