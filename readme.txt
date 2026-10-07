@@ -4,7 +4,7 @@ Tags: mcp, ai, automation, abilities-api, store-locator
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.1.25
+Stable tag: 0.1.26
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.txt
 
@@ -31,6 +31,10 @@ Documentation: https://devenia.com/plugins/mcp-abilities-store-locator/
 For update notifications in WordPress, install [Devenia MCP Updater](https://downloads.devenia.com/devenia-mcp-updater.zip). The updater is optional. You choose which plugins update automatically through WordPress.
 
 == Changelog ==
+
+= 0.1.26 =
+* Fit native OpenStreetMap popups to the Elementor map frame and keep their text clear of zoom controls.
+* Preserve native popup links and keyboard focus when the map frame changes size.
 
 = 0.1.25 =
 * Use the native below-map layout mode for full map width inside the Elementor column, with search controls below it.

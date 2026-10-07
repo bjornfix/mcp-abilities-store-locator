@@ -21,6 +21,8 @@ const document = {
     addEventListener: (name, callback) => listeners.set(name, [...(listeners.get(name) || []), callback]),
 };
 vm.runInNewContext(fs.readFileSync(new URL('../assets/elementor-directory.js', import.meta.url),'utf8'), {window:{wp:{hooks}}, document, MutationObserver: class {observe(){}}, Map, Array, String, Boolean});
+// Other native map providers do not expose Leaflet's container Interface.
+assert.doesNotThrow(() => actions.get('wpslMarkerClicked')({}, {}, {}));
 const found = actions.get('wpslAjaxResultsFound'), data = filters.get('wpslAjaxData');
 const ids = () => grid.children.map((row) => Number(row.className.match(/e-loop-item-(\d+)/)[1]));
 data({action:'store_search',autoload:1});found([{id:13},{id:11},{id:12}]);assert.deepEqual(ids(),[11,12,13]);
