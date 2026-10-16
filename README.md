@@ -2,13 +2,13 @@
 
 Keep a branch's address, map coordinates and contact details together in WP Store Locator. An AI assistant can find the existing store record, update supported fields and check the saved result without creating another directory inside a page builder.
 
-[![Release 0.1.26](https://img.shields.io/badge/release-0.1.26-blue.svg)](https://downloads.devenia.com/mcp-abilities-store-locator.zip)
+[![Release 0.1.27](https://img.shields.io/badge/release-0.1.27-blue.svg)](https://downloads.devenia.com/mcp-abilities-store-locator.zip)
 [![License: GPL v2 or later](https://img.shields.io/badge/License-GPL%20v2%2B-blue.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
 [![WordPress 6.9+](https://img.shields.io/badge/WordPress-6.9%2B-blue.svg)](https://wordpress.org/)
 [![PHP 8.0+](https://img.shields.io/badge/PHP-8.0%2B-purple.svg)](https://www.php.net/)
 
 **Tested up to:** WordPress 7.1
-**Stable tag:** 0.1.26
+**Stable tag:** 0.1.27
 **License:** GPLv2 or later
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html
 **Tags:** mcp, ai, automation, abilities-api, store-locator
@@ -98,7 +98,7 @@ Configure the locator's map service in WP Store Locator. Provider choice, geocod
 | `wpsl/set-template` | Select an installed template, optionally with a dry run |
 | `wpsl/update-settings` | Update supported native settings, reporting invalid or unsupported keys in `skipped` |
 | `wpsl/update-permalink-base-translations` | Replace the configured WPML language-directory store-base map |
-| `wpsl/update-label-translations` | Replace maintained-template search, directions, no-results, search-help and skip-to-results label overrides |
+| `wpsl/update-label-translations` | Replace maintained-template search, map status/navigation, directions, no-results, search-help and skip-to-results label overrides |
 | `wpsl/update-navigation-source-language-links` | Replace the frontend-language to source-language map for native store menu links |
 | `wpsl/clear-transients` | Invoke WP Store Locator's native autoload cache invalidation |
 
@@ -196,6 +196,11 @@ For update notifications in WordPress, install [Devenia MCP Updater](https://dow
 Download the [plugin ZIP](https://downloads.devenia.com/mcp-abilities-store-locator.zip), upload it in **Plugins → Add New → Upload Plugin**, and activate it alongside WP Store Locator. Confirm discovery through the authenticated connection.
 
 ## Changelog
+
+### 0.1.27
+
+- Support language-specific loading, starting-point, back and zoom labels in the maintained locator templates.
+- Preserve native labels for languages without a configured override.
 
 ### 0.1.26
 

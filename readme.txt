@@ -4,7 +4,7 @@ Tags: mcp, ai, automation, abilities-api, store-locator
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.1.26
+Stable tag: 0.1.27
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.txt
 
@@ -22,7 +22,7 @@ The 12 abilities inspect status, stores and categories; create or update store r
 
 With WP Store Locator 3.0.3 or later and Elementor Pro, use [wpsl template="elementor_directory"] with a native Loop Grid whose Query ID is mcp_wpsl_directory and pagination is disabled. One map and native search control the same editable store rows, including filtering and proximity order. Numeric postcodes joined to a city receive a separating space before native geocoding. The original dynamic_columns template remains available.
 
-Language-specific frontend labels support search_label, search_btn_label, directions_label, no_results_label, adjust_search_label and skip_to_results_label. Store data, provider settings and translations remain in their existing native systems.
+Language-specific frontend labels support search_label, search_btn_label, directions_label, no_results_label, adjust_search_label, skip_to_results_label, preloader_label, start_label, back_label and zoom_here_label. Store data, provider settings and translations remain in their existing native systems.
 
 Documentation: https://devenia.com/plugins/mcp-abilities-store-locator/
 
@@ -31,6 +31,10 @@ Documentation: https://devenia.com/plugins/mcp-abilities-store-locator/
 For update notifications in WordPress, install [Devenia MCP Updater](https://downloads.devenia.com/devenia-mcp-updater.zip). The updater is optional. You choose which plugins update automatically through WordPress.
 
 == Changelog ==
+
+= 0.1.27 =
+* Support language-specific loading, starting-point, back and zoom labels in the maintained locator templates.
+* Preserve native labels for languages without a configured override.
 
 = 0.1.26 =
 * Fit native OpenStreetMap popups to the Elementor map frame and keep their text clear of zoom controls.

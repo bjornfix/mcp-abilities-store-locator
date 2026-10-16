@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Store Locator
  * Plugin URI: https://devenia.com/plugins/mcp-abilities-store-locator/
  * Description: Narrow MCP abilities and maintained frontend template support for WP Store Locator.
- * Version: 0.1.26
+ * Version: 0.1.27
  * Author: basicus
  * Author URI: https://profiles.wordpress.org/basicus/
  * License: GPL-2.0+
@@ -27,7 +27,7 @@ add_action( 'admin_init', static function () {
 } );
 
 const MCP_WPSL_COLUMNS_TEMPLATE = 'dynamic_columns';
-const MCP_WPSL_VERSION             = '0.1.26';
+const MCP_WPSL_VERSION             = '0.1.27';
 const MCP_WPSL_BASE_TRANSLATIONS   = 'mcp_wpsl_permalink_base_translations';
 const MCP_WPSL_LABEL_TRANSLATIONS  = 'mcp_wpsl_label_translations';
 const MCP_WPSL_NAV_SOURCE_LINKS    = 'mcp_wpsl_nav_source_language_links';
@@ -145,7 +145,7 @@ function mcp_wpsl_current_language_code(): string {
  * @return array<int,string>
  */
 function mcp_wpsl_supported_label_keys(): array {
-	return array( 'search_label', 'search_btn_label', 'directions_label', 'no_results_label', 'adjust_search_label', 'skip_to_results_label' );
+	return array( 'search_label', 'search_btn_label', 'directions_label', 'no_results_label', 'adjust_search_label', 'skip_to_results_label', 'preloader_label', 'start_label', 'back_label', 'zoom_here_label' );
 }
 
 /**
@@ -1609,7 +1609,7 @@ function mcp_wpsl_register_abilities(): void {
 		'wpsl/update-label-translations',
 		array(
 			'label'               => 'Update WP Store Locator Label Translations',
-			'description'         => 'Configures language-specific search, directions, no-results, search-help and skip-to-results labels for the maintained templates.',
+			'description'         => 'Configures language-specific search, map status, map navigation, directions, no-results, search-help and skip-to-results labels for the maintained templates.',
 			'category'            => 'site',
 			'input_schema'        => array(
 				'type'                 => 'object',

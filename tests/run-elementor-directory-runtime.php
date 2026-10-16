@@ -21,5 +21,15 @@ try{
  $check('0256 Oslo'===apply_filters('wpsl_search_input',''),'Native input normalises valid footer postcode/city');
  $check('" data-mcp-injected="yes'===apply_filters('wpsl_search_input','" data-mcp-injected="yes'),'Template escaping retains ownership of arbitrary literal input');
 }finally{remove_filter('pre_option_wpsl_settings',$option);remove_filter('pre_option_mcp_wpsl_label_translations',$labels);remove_filter('wpml_current_language',$lang);$_POST=array();}
+$english_labels=static function(){return array('en'=>array('preloader_label'=>'Searching...','start_label'=>'Starting point','back_label'=>'Back','zoom_here_label'=>'Zoom here'));};
+$english_language=static function(){return 'en';};
+add_filter('pre_option_wpsl_settings',$option);add_filter('pre_option_mcp_wpsl_label_translations',$english_labels);add_filter('wpml_current_language',$english_language);
+try{
+ $native=array('preloader'=>'Original loading','startPoint'=>'Original start','back'=>'Original back','zoomHere'=>'Original zoom','unrelated'=>'Keep');
+ $translated=apply_filters('wpsl_labels',$native);
+ $check(array('preloader'=>'Searching...','startPoint'=>'Starting point','back'=>'Back','zoomHere'=>'Zoom here','unrelated'=>'Keep')===$translated,'Configured English status/navigation values reach native WPSL labels');
+ remove_filter('wpml_current_language',$english_language);add_filter('wpml_current_language',$lang);
+ $check($native===apply_filters('wpsl_labels',$native),'Unconfigured Norwegian labels are preserved exactly');
+}finally{remove_filter('pre_option_wpsl_settings',$option);remove_filter('pre_option_mcp_wpsl_label_translations',$english_labels);remove_filter('wpml_current_language',$english_language);remove_filter('wpml_current_language',$lang);}
 echo"Checks: $passed passed, $failed failed\n";
 if($failed){throw new RuntimeException('Directory runtime contract failed');}

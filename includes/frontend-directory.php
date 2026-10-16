@@ -57,6 +57,17 @@ function mcp_wpsl_translate_frontend_labels( array $labels ): array {
 	}
 	$translations = mcp_wpsl_get_label_translations();
 	$current      = $translations[ mcp_wpsl_current_language_code() ] ?? array();
+	$native_keys  = array(
+		'preloader_label' => 'preloader',
+		'start_label'     => 'startPoint',
+		'back_label'      => 'back',
+		'zoom_here_label' => 'zoomHere',
+	);
+	foreach ( $native_keys as $setting_key => $native_key ) {
+		if ( isset( $current[ $setting_key ] ) ) {
+			$labels[ $native_key ] = $current[ $setting_key ];
+		}
+	}
 	if ( isset( $current['directions_label'] ) ) {
 		$labels['directions'] = $current['directions_label'];
 	}
