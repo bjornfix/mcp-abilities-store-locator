@@ -43,7 +43,8 @@ try {
  try{$r=$run('wpsl/update-settings',array('settings'=>array('start_name'=>'MCP rejected settings fixture')));$check($failed($r),'Rejected settings write is reported');}finally{remove_filter('pre_update_option_wpsl_settings',$block_save,999);}
  $label_settings=get_option('mcp_wpsl_label_translations');
  $r=$run('wpsl/update-label-translations',array('translations'=>array('en'=>array('preloader_label'=>'<b>Searching...</b>','start_label'=>'Starting point','back_label'=>'Back','zoom_here_label'=>'Zoom here')),'dry_run'=>true));
- $check(!$failed($r) && array('preloader_label'=>'Searching...','start_label'=>'Starting point','back_label'=>'Back','zoom_here_label'=>'Zoom here')===($r['translations']['en']??array()) && $label_settings===get_option('mcp_wpsl_label_translations'),'Public label interface sanitises new keys and keeps dry runs read only');
+ $translated_labels=(array)($r['translations']??array());
+ $check(!$failed($r) && array('preloader_label'=>'Searching...','start_label'=>'Starting point','back_label'=>'Back','zoom_here_label'=>'Zoom here')===($translated_labels['en']??array()) && $label_settings===get_option('mcp_wpsl_label_translations'),'Public label interface sanitises new keys and keeps dry runs read only');
  $r=$run('wpsl/update-label-translations',array('translations'=>array('en'=>array('hours_label'=>'Unsupported fixture')),'dry_run'=>true));$check($failed($r),'Unsupported template label rejected');
  $admin=$GLOBALS['wpsl_admin'];$GLOBALS['wpsl_admin']=null;
  try {set_transient('wpsl_autoload_99_mcpfixture','old',60);$r=$run('wpsl/clear-transients');$check(!$failed($r) && false===get_transient('wpsl_autoload_99_mcpfixture'),'Native cache method loads when no admin instance exists');}finally{$GLOBALS['wpsl_admin']=$admin;}
