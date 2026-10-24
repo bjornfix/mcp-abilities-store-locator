@@ -2,13 +2,13 @@
 
 Keep a branch's address, map coordinates and contact details together in WP Store Locator. An AI assistant can find the existing store record, update supported fields and check the saved result without creating another directory inside a page builder.
 
-[![Release 0.1.31](https://img.shields.io/badge/release-0.1.31-blue.svg)](https://downloads.devenia.com/mcp-abilities-store-locator.zip)
+[![Release 0.1.32](https://img.shields.io/badge/release-0.1.32-blue.svg)](https://downloads.devenia.com/mcp-abilities-store-locator.zip)
 [![License: GPL v2 or later](https://img.shields.io/badge/License-GPL%20v2%2B-blue.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
 [![WordPress 6.9+](https://img.shields.io/badge/WordPress-6.9%2B-blue.svg)](https://wordpress.org/)
 [![PHP 8.0+](https://img.shields.io/badge/PHP-8.0%2B-purple.svg)](https://www.php.net/)
 
 **Tested up to:** WordPress 7.1
-**Stable tag:** 0.1.31
+**Stable tag:** 0.1.32
 **License:** GPLv2 or later
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html
 **Tags:** mcp, ai, automation, abilities-api, store-locator
@@ -197,7 +197,7 @@ Download the [plugin ZIP](https://downloads.devenia.com/mcp-abilities-store-loca
 
 ## Changelog
 
-### 0.1.31
+### 0.1.32
 
 Keep native control names unchanged without configured overrides and support independent per-language map-control labels.
 
