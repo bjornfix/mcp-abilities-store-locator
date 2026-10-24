@@ -4,7 +4,7 @@ Tags: mcp, ai, automation, abilities-api, store-locator
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.1.30
+Stable tag: 0.1.31
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.txt
 
@@ -32,7 +32,7 @@ For update notifications in WordPress, install [Devenia MCP Updater](https://dow
 
 == Changelog ==
 
-= 0.1.30 =
+= 0.1.31 =
 * Keep native control names unchanged without configured overrides and support independent per-language map-control labels.
 
 = 0.1.29 =
