@@ -3,7 +3,7 @@
  * Plugin Name: MCP Abilities - Store Locator
  * Plugin URI: https://devenia.com/plugins/mcp-abilities-store-locator/
  * Description: Narrow MCP abilities and maintained frontend template support for WP Store Locator.
- * Version: 0.1.28
+ * Version: 0.1.29
  * Author: basicus
  * Author URI: https://profiles.wordpress.org/basicus/
  * License: GPL-2.0+
@@ -145,7 +145,7 @@ function mcp_wpsl_current_language_code(): string {
  * @return array<int,string>
  */
 function mcp_wpsl_supported_label_keys(): array {
-	return array( 'search_label', 'search_btn_label', 'directions_label', 'no_results_label', 'adjust_search_label', 'skip_to_results_label', 'preloader_label', 'start_label', 'back_label', 'zoom_here_label' );
+	return array( 'search_label', 'search_btn_label', 'directions_label', 'no_results_label', 'adjust_search_label', 'skip_to_results_label', 'preloader_label', 'start_label', 'back_label', 'zoom_here_label', 'zoom_in_label', 'zoom_out_label', 'popup_close_label' );
 }
 
 /**

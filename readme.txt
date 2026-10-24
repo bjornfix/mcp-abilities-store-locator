@@ -4,7 +4,7 @@ Tags: mcp, ai, automation, abilities-api, store-locator
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.1.28
+Stable tag: 0.1.29
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.txt
 
@@ -31,6 +31,9 @@ Documentation: https://devenia.com/plugins/mcp-abilities-store-locator/
 For update notifications in WordPress, install [Devenia MCP Updater](https://downloads.devenia.com/devenia-mcp-updater.zip). The updater is optional. You choose which plugins update automatically through WordPress.
 
 == Changelog ==
+
+= 0.1.29 =
+* Support optional language-specific native Leaflet zoom and popup-close names without replacing controls or changing map behavior.
 
 = 0.1.28 =
 * Support language-specific loading, starting-point, back and zoom labels in the maintained locator templates.

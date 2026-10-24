@@ -128,3 +128,23 @@ function mcp_wpsl_add_directory_script( array $settings ): array {
 	return $settings;
 }
 add_filter( 'wpsl_js_settings', 'mcp_wpsl_add_directory_script', 35 );
+
+/** Load optional control names before native WPSL creates any of its maps. */
+function mcp_wpsl_add_map_control_language( array $settings ): array {
+	static $added = false;
+	if ( $added || ! wp_script_is( 'wpsl', 'registered' ) ) {
+		return $settings;
+	}
+	$translations = mcp_wpsl_get_label_translations();
+	$current = $translations[ mcp_wpsl_current_language_code() ] ?? array();
+	$labels = array_intersect_key( $current, array_flip( array( 'zoom_in_label', 'zoom_out_label', 'popup_close_label' ) ) );
+	if ( empty( $labels ) ) {
+		return $settings;
+	}
+	$script = file_get_contents( __DIR__ . '/../assets/map-control-language.js' );
+	if ( false !== $script ) {
+		$added = wp_add_inline_script( 'wpsl', '(function(labels){' . $script . '})(' . wp_json_encode( $labels ) . ');', 'before' );
+	}
+	return $settings;
+}
+add_filter( 'wpsl_js_settings', 'mcp_wpsl_add_map_control_language', 35 );
