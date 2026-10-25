@@ -4,7 +4,7 @@ Tags: mcp, ai, automation, abilities-api, store-locator
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.1.32
+Stable tag: 0.1.33
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.txt
 
@@ -31,6 +31,9 @@ Documentation: https://devenia.com/plugins/mcp-abilities-store-locator/
 For update notifications in WordPress, install [Devenia MCP Updater](https://downloads.devenia.com/devenia-mcp-updater.zip). The updater is optional. You choose which plugins update automatically through WordPress.
 
 == Changelog ==
+
+= 0.1.33 =
+* Keep native category maps in WPML's configured language while retaining dynamic categories, new stores and native untranslated-content fallback. Sites without WPML and untranslated store types retain their original query behavior.
 
 = 0.1.32 =
 * Keep native control names unchanged without configured overrides and support independent per-language map-control labels.
