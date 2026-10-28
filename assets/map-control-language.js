@@ -3,6 +3,24 @@
     'use strict';
     if (!hooks) { return; }
     var observed = new WeakSet();
+    var localizedLayers = new WeakSet();
+    function localizeRegion() {
+        var leaflet = window.L;
+        var Layer = leaflet && leaflet.MaplibreGL;
+        if (!labels.map_region_label || !Layer || typeof Layer.addInitHook !== 'function'
+            || typeof leaflet.setOptions !== 'function' || localizedLayers.has(Layer)) { return; }
+        Layer.addInitHook(function () {
+            var current = this.options && this.options.locale;
+            if (current !== undefined && current !== null
+                && (typeof current !== 'object' || Array.isArray(current))) { return; }
+            if (current && Object.prototype.hasOwnProperty.call(current, 'Map.Title')) { return; }
+            var locale = Object.assign({}, current || {});
+            locale['Map.Title'] = labels.map_region_label;
+            leaflet.setOptions(this, {locale: locale});
+        });
+        localizedLayers.add(Layer);
+    }
+
     function bind(frame) {
         if (!frame || observed.has(frame)) { return; }
         observed.add(frame);
@@ -22,7 +40,7 @@
     }
     hooks.addFilter('wpslMapOptions', 'mcp-wpsl/map-control-language', function (options, mapId) {
         var frame = document.getElementById(mapId);
-        if (frame && frame.matches('.wpsl-canvas-osm, .wpsl-canvas-stadia')) { bind(frame); }
+        if (frame && frame.matches('.wpsl-canvas-osm, .wpsl-canvas-stadia')) { localizeRegion(); bind(frame); }
         return options;
     });
 }(window.wp && window.wp.hooks));

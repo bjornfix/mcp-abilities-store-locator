@@ -2,13 +2,13 @@
 
 Keep a branch's address, map coordinates and contact details together in WP Store Locator. An AI assistant can find the existing store record, update supported fields and check the saved result without creating another directory inside a page builder.
 
-[![Release 0.1.33](https://img.shields.io/badge/release-0.1.33-blue.svg)](https://downloads.devenia.com/mcp-abilities-store-locator.zip)
+[![Release 0.1.34](https://img.shields.io/badge/release-0.1.34-blue.svg)](https://downloads.devenia.com/mcp-abilities-store-locator.zip)
 [![License: GPL v2 or later](https://img.shields.io/badge/License-GPL%20v2%2B-blue.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
 [![WordPress 6.9+](https://img.shields.io/badge/WordPress-6.9%2B-blue.svg)](https://wordpress.org/)
 [![PHP 8.0+](https://img.shields.io/badge/PHP-8.0%2B-purple.svg)](https://www.php.net/)
 
 **Tested up to:** WordPress 7.1
-**Stable tag:** 0.1.33
+**Stable tag:** 0.1.34
 **License:** GPLv2 or later
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html
 **Tags:** mcp, ai, automation, abilities-api, store-locator
@@ -169,7 +169,7 @@ The supplied translation map is a complete replacement. Include any other langua
 }
 ```
 
-Supported keys are `search_label`, `search_btn_label`, `directions_label`, `no_results_label`, `adjust_search_label`, `skip_to_results_label`, `preloader_label`, `start_label`, `back_label`, `zoom_here_label`, `zoom_in_label`, `zoom_out_label` and `popup_close_label`. Native control names remain unchanged when no matching language override is configured. Store data and labels remain in native site settings. URL-base and menu-language mappings also replace their complete stored maps; inspect their current values with `wpsl/get-status` first.
+Supported keys are `search_label`, `search_btn_label`, `directions_label`, `no_results_label`, `adjust_search_label`, `skip_to_results_label`, `preloader_label`, `start_label`, `back_label`, `zoom_here_label`, `zoom_in_label`, `zoom_out_label`, `popup_close_label` and `map_region_label`. Native control names remain unchanged when no matching language override is configured. Store data and labels remain in native site settings. URL-base and menu-language mappings also replace their complete stored maps; inspect their current values with `wpsl/get-status` first.
 
 ### Use an editable native Elementor directory
 
@@ -198,6 +198,10 @@ For update notifications in WordPress, install [Devenia MCP Updater](https://dow
 Download the [plugin ZIP](https://downloads.devenia.com/mcp-abilities-store-locator.zip), upload it in **Plugins → Add New → Upload Plugin**, and activate it alongside WP Store Locator. Confirm discovery through the authenticated connection.
 
 ## Changelog
+
+### 0.1.34
+
+- Support an optional language-specific native map-region name while preserving explicit MapLibre locale titles and existing controls.
 
 ### 0.1.33
 

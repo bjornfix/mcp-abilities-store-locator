@@ -137,7 +137,7 @@ function mcp_wpsl_add_map_control_language( array $settings ): array {
 	}
 	$translations = mcp_wpsl_get_label_translations();
 	$current = $translations[ mcp_wpsl_current_language_code() ] ?? array();
-	$labels = array_intersect_key( $current, array_flip( array( 'zoom_in_label', 'zoom_out_label', 'popup_close_label' ) ) );
+	$labels = array_intersect_key( $current, array_flip( array( 'zoom_in_label', 'zoom_out_label', 'popup_close_label', 'map_region_label' ) ) );
 	if ( empty( $labels ) ) {
 		return $settings;
 	}
